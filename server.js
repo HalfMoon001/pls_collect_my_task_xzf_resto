@@ -399,7 +399,7 @@ function callClaude(prompt, taskName = '') {
     const timer = setTimeout(() => {
       console.log('[CC] Timeout, killing process');
       child.kill('SIGTERM');
-    }, 120000);
+    }, 300000);
 
     child.on('close', () => clearTimeout(timer));
   });
@@ -480,23 +480,27 @@ app.post('/api/cc/ask', async (req, res) => {
 手帐内容:
 ${memosText}`;
         result = await callClaude(prompt, taskName);
+        let cleanGraphResult = result.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
+        let graphData;
         try {
-          const jsonMatch = result.match(/\{[\s\S]*\}/);
-          const graphData = jsonMatch ? JSON.parse(jsonMatch[0]) : { nodes: [], edges: [], summaries: [], insights: '' };
-          if (!suggestions.graphHistory) suggestions.graphHistory = [];
-          const entry = {
-            id: uuidv4(),
-            nodes: graphData.nodes || [],
-            edges: graphData.edges || [],
-            summaries: graphData.summaries || [],
-            insights: graphData.insights || '',
-            tags: scopeTags,
-            generatedAt: new Date().toISOString()
-          };
-          suggestions.graphHistory.push(entry);
-          writeJSON('ai_suggestions.json', suggestions);
-          return res.json({ type: 'graph', graph: entry });
-        } catch { return res.json({ type: 'graph', graph: { nodes: [], edges: [], summaries: [], insights: '', generatedAt: null }, raw: result }); }
+          const jsonMatch = cleanGraphResult.match(/\{[\s\S]*\}/);
+          graphData = jsonMatch ? JSON.parse(jsonMatch[0]) : { nodes: [], edges: [], summaries: [], insights: '' };
+        } catch {
+          graphData = { nodes: [], edges: [], summaries: [], insights: '' };
+        }
+        if (!suggestions.graphHistory) suggestions.graphHistory = [];
+        const entry = {
+          id: uuidv4(),
+          nodes: graphData.nodes || [],
+          edges: graphData.edges || [],
+          summaries: graphData.summaries || [],
+          insights: graphData.insights || '',
+          tags: scopeTags,
+          generatedAt: new Date().toISOString()
+        };
+        suggestions.graphHistory.push(entry);
+        writeJSON('ai_suggestions.json', suggestions);
+        return res.json({ type: 'graph', graph: entry });
       }
 
       case 'daily-digest': {
@@ -519,12 +523,15 @@ summary的格式要求：
 每个日期单独一段，前面用"· "开头。如果某天没有内容就写"暂无记录"。
 只返回JSON。\n\n${yesterdayLabel}的手帐:\n${yesterdayText || '(暂无记录)'}\n\n${todayLabel}的手帐:\n${todayText || '(暂无记录)'}`;
         result = await callClaude(prompt, taskName);
+        let cleanDailyResult = result.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
         try {
-          const jsonMatch = result.match(/\{[\s\S]*\}/);
-          suggestions.dailyDigest = jsonMatch ? JSON.parse(jsonMatch[0]) : { date: today, summary: '暂无内容', tasks: [] };
-          writeJSON('ai_suggestions.json', suggestions);
-          return res.json({ type: 'daily-digest', digest: suggestions.dailyDigest });
-        } catch { return res.json({ type: 'daily-digest', digest: { date: today, summary: result, tasks: [] } }); }
+          const jsonMatch = cleanDailyResult.match(/\{[\s\S]*\}/);
+          suggestions.dailyDigest = jsonMatch ? JSON.parse(jsonMatch[0]) : { date: today, summary: cleanDailyResult, tasks: [] };
+        } catch {
+          suggestions.dailyDigest = { date: today, summary: cleanDailyResult, tasks: [] };
+        }
+        writeJSON('ai_suggestions.json', suggestions);
+        return res.json({ type: 'daily-digest', digest: suggestions.dailyDigest });
       }
 
       case 'weekly-digest': {
@@ -539,19 +546,25 @@ summary的格式要求：
         const memosText = weekMemos.map(m => `- (${m.tags.join(',')}) ${m.content} [${m.createdAt.split('T')[0]}]`).join('\n');
         prompt = `你是一个手帐助手。总结过去一周的手帐${tagLabel}，分析标签趋势，生成深度总结。返回JSON对象，包含week、summary、tagTrends(对象)字段。只返回JSON。\n\n本周备忘:\n${memosText || '(本周暂无手帐)'}`;
         result = await callClaude(prompt, taskName);
+        // Strip markdown code fences if present
+        let cleanResult = result.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
+        const weekStr = `${now.getFullYear()}-W${String(getISOWeek(now)).padStart(2, '0')}`;
+        let digest;
         try {
-          const jsonMatch = result.match(/\{[\s\S]*\}/);
-          const weekStr = `${now.getFullYear()}-W${String(getISOWeek(now)).padStart(2, '0')}`;
-          const digest = jsonMatch ? JSON.parse(jsonMatch[0]) : { week: weekStr, summary: result };
-          if (filterTags) digest.tags = filterTags;
-          digest.generatedAt = new Date().toISOString();
-          // Save to array
-          if (!suggestions.weeklyDigests) suggestions.weeklyDigests = [];
-          suggestions.weeklyDigests.unshift(digest);
-          suggestions.weeklyDigest = digest; // backward compat
-          writeJSON('ai_suggestions.json', suggestions);
-          return res.json({ type: 'weekly-digest', digest });
-        } catch { return res.json({ type: 'weekly-digest', digest: { summary: result, generatedAt: new Date().toISOString() } }); }
+          const jsonMatch = cleanResult.match(/\{[\s\S]*\}/);
+          digest = jsonMatch ? JSON.parse(jsonMatch[0]) : { week: weekStr, summary: cleanResult };
+        } catch {
+          // JSON parse failed (e.g. unescaped quotes in summary) — use raw text
+          digest = { week: weekStr, summary: cleanResult };
+        }
+        if (filterTags) digest.tags = filterTags;
+        digest.generatedAt = new Date().toISOString();
+        // Save to array (always, even if JSON parse failed)
+        if (!suggestions.weeklyDigests) suggestions.weeklyDigests = [];
+        suggestions.weeklyDigests.unshift(digest);
+        suggestions.weeklyDigest = digest; // backward compat
+        writeJSON('ai_suggestions.json', suggestions);
+        return res.json({ type: 'weekly-digest', digest });
       }
 
       default:
