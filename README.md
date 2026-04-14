@@ -94,6 +94,8 @@ cd pls_collect_my_task
 
 在项目目录下执行 `git pull && npm install` 即可。`data/` 文件夹不受 git 管理，更新不会覆盖你的数据。
 
+> ⚠️ 请勿删除整个项目文件夹重新 clone，否则 `data/` 目录会一并丢失。如需备份，先拷贝 `data/` 文件夹。
+
 #### 3) 启动
 
 a. **Mac / Linux：**
