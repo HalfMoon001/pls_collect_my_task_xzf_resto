@@ -182,7 +182,7 @@ for /f "tokens=5" %a in ('netstat -ano ^| findstr ":3013 " ^| findstr "LISTENING
 - 标签筛选、关键词搜索
 - 看板视图按标签分组展示
 
-### 🤖 智能助手（需要 Claude Code CLI）
+### 🤖 智能助手（需要 Claude Code CLI）- 注意⚠️：使用cc时需要正确的科学上网环境
 - **智能查找** —— 输入你想找的东西，AI 从所有便签里找出最相关的
 - **整理标签** —— AI 分析便签，建议合并或新增标签
 - **任务图谱** —— 可视化展示便签之间的关联关系
@@ -212,7 +212,7 @@ for /f "tokens=5" %a in ('netstat -ano ^| findstr ":3013 " ^| findstr "LISTENING
 1. 打开终端
 2. 运行 `claude`（或 `/opt/homebrew/bin/claude`）
 3. 按提示完成登录
-4. 回到 app 重试，**不需要重启 app**
+4. 回到 app 重试。如果仍然不行，关闭服务后重新启动（源码版运行 `stop.sh` / `stop.bat`，再 `start.sh` / `start.bat`）
 
 怎么确认是这个问题？按 `Cmd+Option+I` 打开 DevTools → Console，再点一次 AI 按钮，如果看到 `CC 调用失败` 或 `Claude exited with code ...` 之类，基本就是登录问题。
 
@@ -228,7 +228,7 @@ for /f "tokens=5" %a in ('netstat -ano ^| findstr ":3013 " ^| findstr "LISTENING
    claude
    ```
 3. 按提示重新登录一次（已经登录过的话会直接显示欢迎信息，没登录会引导你去网页认证）
-4. 登录完成后，回到 app 或浏览器，点一下「重新生成」就行，**不需要重启 app/服务**
+4. 登录完成后，回到 app 或浏览器，点一下「重新生成」就行。如果仍然不行，关闭服务后重新启动（源码版运行 `stop.sh` / `stop.bat`，再 `start.sh` / `start.bat`）
 
 > 这个问题很常见，因为 Claude CLI 的登录态有时候会自动过期。如果某天突然发现 AI 功能"没反应"，第一反应应该就是重新跑一遍 `claude` 看看登录状态。
 
