@@ -2,6 +2,11 @@
 
 > 一个带 AI 助理的个人便签手帐应用。用 Claude Code CLI 作为后端大脑，帮你整理碎碎念、追踪习惯、生成日周摘要、绘制任务关联图谱。
 
+[![在线 Demo](https://img.shields.io/badge/🌐_在线_Demo-点击预览-E8B84B?style=for-the-badge&labelColor=4A3A28)](https://anselkocen.github.io/pls_collect_my_task/)
+[![GitHub Release](https://img.shields.io/badge/📦_下载_Mac_App-Releases-4A3A28?style=for-the-badge&labelColor=E8B84B)](https://github.com/AnselKocen/pls_collect_my_task/releases)
+
+> 🌐 **[在线 Demo 预览 →](https://anselkocen.github.io/pls_collect_my_task/)** 不用装任何东西，在浏览器里先逛一圈看看长什么样。Demo 内所有 AI 按钮均为静态模拟，完整功能请走下方安装步骤。
+
 ## ✨ 它能帮你做什么
 
 - **随手记录** —— 写下碎碎念、待办、灵感，打标签分类
