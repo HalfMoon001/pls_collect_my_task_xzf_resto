@@ -333,15 +333,38 @@ const { spawn } = require('child_process');
 
 let ccBusy = false;
 let ccCurrentTask = '';
+const ccQueue = [];          // FIFO of pending CC jobs: { prompt, taskName, resolve, reject }
+const CC_MAX_QUEUE = 8;      // backpressure: reject (→409) only once this many are already waiting
 
 app.get('/api/cc/status', (req, res) => {
-  res.json({ busy: ccBusy, task: ccCurrentTask });
+  res.json({ busy: ccBusy, task: ccCurrentTask, queue: ccQueue.length, queued: ccQueue.map((j) => j.taskName) });
 });
 
+// Public API. CC 一次只干一件事，但排队不丢：每次调用入队，轮到时才真正 spawn。
+// 只有当队列已经堆到 CC_MAX_QUEUE 时才立刻 reject（映射成 409），避免无限堆积。
 function callClaude(prompt, taskName = '') {
-  if (ccBusy) return Promise.reject(new Error(`CC_BUSY:${ccCurrentTask}`));
+  return new Promise((resolve, reject) => {
+    if (ccQueue.length >= CC_MAX_QUEUE) {
+      return reject(new Error(`CC_BUSY:${ccCurrentTask || taskName}（前面已有 ${ccQueue.length} 个任务排队）`));
+    }
+    ccQueue.push({ prompt, taskName, resolve, reject });
+    pumpCcQueue();
+  });
+}
+
+// Drain the queue one job at a time. The queue owns the ccBusy flag.
+function pumpCcQueue() {
+  if (ccBusy || ccQueue.length === 0) return;
+  const job = ccQueue.shift();
   ccBusy = true;
-  ccCurrentTask = taskName;
+  ccCurrentTask = job.taskName;
+  runClaudeProcess(job.prompt, job.taskName)
+    .then(job.resolve, job.reject)
+    .finally(() => { ccBusy = false; ccCurrentTask = ''; pumpCcQueue(); });
+}
+
+// Spawn one `claude -p` process and resolve with its stdout. No locking here.
+function runClaudeProcess(prompt, taskName = '') {
   return new Promise((resolve, reject) => {
     console.log(`[CC] Calling claude, task=${taskName}, prompt length: ${prompt.length}, HOME=${process.env.HOME}`);
     // Pass prompt via stdin to avoid OS command-line length limits
@@ -378,7 +401,6 @@ function callClaude(prompt, taskName = '') {
     child.stderr.on('data', d => { stderr += d.toString(); });
 
     child.on('close', (code, signal) => {
-      ccBusy = false; ccCurrentTask = '';
       console.log(`[CC] Claude exited: code=${code}, signal=${signal}, stdout=${stdout.length}bytes, stderr=${stderr.substring(0, 200)}`);
       // Use stdout if available, even if exit code is non-zero
       if (stdout.trim()) {
@@ -391,7 +413,6 @@ function callClaude(prompt, taskName = '') {
     });
 
     child.on('error', (err) => {
-      ccBusy = false; ccCurrentTask = '';
       console.error('[CC] Spawn error:', err);
       reject(err);
     });
