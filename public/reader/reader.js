@@ -57,6 +57,7 @@ async function boot() {
   const { decks } = await api.get("/api/reader/decks");
   state.decks = decks;
   bindDatepicker();
+  bindDropzone();
   $("#btn-upload").onclick = () => $("#file-deck").click();
   $("#file-deck").onchange = uploadDeck;
   document.querySelectorAll(".tab").forEach((t) => (t.onclick = () => switchTab(t.dataset.tab)));
@@ -104,10 +105,12 @@ function toast(msg) {
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800);
 }
 
-// upload today's deck HTML → save to deck folder → load it
-async function uploadDeck(e) {
-  const f = e.target.files[0]; e.target.value = "";
+// upload today's deck HTML → save to deck folder → load it (+ auto-ingest)
+function uploadDeck(e) { const f = e.target.files[0]; e.target.value = ""; uploadFile(f); }
+
+async function uploadFile(f) {
   if (!f) return;
+  if (!/\.html?$/i.test(f.name || "")) { toast("请拖入 .html 导读文件"); return; }
   setStatus("上传中…");
   try {
     const fd = new FormData(); fd.append("deck", f);
@@ -119,6 +122,27 @@ async function uploadDeck(e) {
     loadDeck(res.date);
     autoExtract(res.date);   // 顺手抽取收录：公司/观点/动态进演变追踪 + 学习
   } catch (err) { setStatus("上传失败"); alert("上传失败：" + err.message); }
+}
+
+// drag a .html anywhere onto the page to upload it (same flow as the button).
+// The deck lives in an iframe, so during a drag we cover it with a full-page
+// overlay (and disable its pointer events) — otherwise dropping on the iframe
+// would make the browser navigate to the file.
+function bindDropzone() {
+  const overlay = $("#drop-overlay");
+  const deck = $("#deck");
+  const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files");
+  let depth = 0;
+  const show = () => { overlay.classList.add("show"); if (deck) deck.style.pointerEvents = "none"; };
+  const hide = () => { depth = 0; overlay.classList.remove("show"); if (deck) deck.style.pointerEvents = ""; };
+  window.addEventListener("dragenter", (e) => { if (!hasFiles(e)) return; e.preventDefault(); depth++; show(); });
+  window.addEventListener("dragover", (e) => { if (!hasFiles(e)) return; e.preventDefault(); });
+  window.addEventListener("dragleave", (e) => { if (!hasFiles(e)) return; depth--; if (depth <= 0) hide(); });
+  window.addEventListener("drop", (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); hide();
+    uploadFile(e.dataTransfer.files[0]);
+  });
 }
 
 // Ingest a deck into the store (companies / opinions / posts / relations) via CC,
