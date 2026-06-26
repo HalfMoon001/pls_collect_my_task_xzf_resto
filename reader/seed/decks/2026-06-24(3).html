@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hot from Kitchen — 2026-06-24 · Internal team brief</title>
+
+<!-- =========================================================
+     FONTS — distinctive editorial set (Google Fonts).
+     Fraunces (display serif headlines) + Hanken Grotesk (humanist
+     body) + IBM Plex Mono (kickers / handles / links / stats).
+     Brand sans fallback (Calibri/Carlito) kept in every stack so
+     the deck degrades gracefully if opened offline.
+     ========================================================= -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* =========================================================
+   THEME TOKENS
+   Brand palette is LOCKED (brand/tokens.css). The deck reads
+   WHITE / BLUE with RED for attention. Green & brown are
+   deliberately unused. Layout is custom editorial.
+   ========================================================= */
+:root {
+    /* --- Brand colours (LOCKED) --- */
+    --navy:      #0F2147;  /* headings / hero / structure        */
+    --denim:     #80B3D2;  /* secondary blue: rules, chrome, links */
+    --wool:      #F5F2ED;  /* page background                     */
+    --vermilion: #B5252B;  /* THE accent — "look here" + Yibo voice */
+    --salmon:    #F9D2C2;  /* tinted callouts / YB bubble fill     */
+    --ink:       #111111;  /* body text                           */
+    --mute:      #6E6E6E;  /* captions / helper text              */
+
+    /* light navy & denim tints for surfaces */
+    --denim-12:  rgba(128,179,210,0.14);
+    --denim-22:  rgba(128,179,210,0.30);
+    --navy-04:   rgba(15,33,71,0.04);
+    --navy-soft: #16305F;
+
+    /* --- Typography (distinctive + brand sans fallback) --- */
+    --font-body:    "Hanken Grotesk","Calibri","Carlito","Helvetica Neue",Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    --font-display: "Fraunces",Georgia,"Times New Roman",serif;
+    --font-mono:    "IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+
+    /* --- Stage --- */
+    --stage-bg: #0A1730;        /* letterbox bars frame the deck */
+    --slide-bg: var(--wool);
+
+    /* --- Motion --- */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration: 0.6s;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* =========================================================
+   VIEWPORT-BASE.CSS  (mandatory fixed 16:9 stage — FULL copy)
+   ========================================================= */
+/* 1. Lock the browser viewport */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+
+/* 2. Full-window deck viewport */
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+
+/* 3. Fixed 16:9 design canvas.
+   JavaScript sets transform: translate(...) scale(...). */
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+
+/* 4. Slides stack inside the fixed stage.
+   Content must be laid out at 1920×1080, not reflowed per device. */
+.slide {
+    position: absolute;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+
+/* 5. Keep media inside authored slide bounds */
+img,
+video,
+canvas,
+svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* 6. Presentation chrome stays outside the slide design system */
+.deck-controls {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+/* 7. Print one fixed-size slide per page */
+@media print {
+    html,
+    body {
+        width: 1920px;
+        height: auto;
+        overflow: visible;
+        background: #fff;
+    }
+
+    .deck-viewport {
+        position: static;
+        overflow: visible;
+        background: #fff;
+    }
+
+    .deck-stage {
+        position: static;
+        width: auto;
+        height: auto;
+        transform: none !important;
+        background: none;
+    }
+
+    .slide {
+        position: relative;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: 1920px;
+        height: 1080px;
+        break-after: page;
+        page-break-after: always;
+    }
+
+    .slide:last-child {
+        break-after: auto;
+        page-break-after: auto;
+    }
+
+    .deck-controls {
+        display: none !important;
+    }
+}
+
+/* 8. Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* =========================================================
+   GLOBAL SLIDE TYPE & FRAME
+   Large, comfortable reading sizes at the 1920×1080 stage.
+   ========================================================= */
+.slide {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--wool);
+}
+
+/* Content slides share generous padding and a top→bottom flow */
+.pad {
+    position: absolute;
+    inset: 0;
+    padding: 84px 110px 78px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Top meta bar: kicker (red) left, index (blue) right --- */
+.topbar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--denim);
+    padding-bottom: 18px;
+}
+.kicker {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--vermilion);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.kicker .dot {
+    width: 13px; height: 13px; border-radius: 999px;
+    background: var(--vermilion);
+    display: inline-block;
+}
+.index {
+    font-family: var(--font-mono);
+    font-size: 23px;
+    letter-spacing: 0.1em;
+    color: var(--navy);
+    font-weight: 500;
+}
+
+/* --- Headline + source --- */
+.headline {
+    font-family: var(--font-display);
+    color: var(--navy);
+    font-weight: 600;
+    font-size: 58px;
+    line-height: 1.07;
+    letter-spacing: -0.01em;
+    margin-top: 34px;
+    max-width: 1640px;
+}
+.headline.sm { font-size: 50px; }
+.source {
+    font-family: var(--font-mono);
+    font-size: 25px;
+    color: var(--mute);
+    margin-top: 20px;
+    letter-spacing: 0.01em;
+}
+.source .h { color: var(--navy); font-weight: 600; }
+.source .src { color: var(--vermilion); }
+
+/* The body region grows to fill the stage */
+.body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: safe center;
+    min-height: 0;
+    margin-top: 30px;
+}
+.cols {
+    display: grid;
+    gap: 54px;
+    align-items: start;
+}
+
+/* --- Source-grounded info list --- */
+.info { font-size: 33px; line-height: 1.42; color: var(--ink); }
+.info .lead { font-size: 34px; margin-bottom: 22px; }
+.info ul { list-style: none; display: flex; flex-direction: column; gap: 22px; }
+.info li { position: relative; padding-left: 40px; }
+.info li::before {
+    content: "";
+    position: absolute; left: 0; top: 16px;
+    width: 16px; height: 16px;
+    background: var(--vermilion);
+    transform: rotate(45deg);
+}
+.info b, .info strong { color: var(--navy); font-weight: 700; }
+.info .em { color: var(--vermilion); font-weight: 700; }
+
+.spec {
+    font-family: var(--font-mono);
+    font-size: 23px;
+    color: var(--navy);
+    background: var(--denim-12);
+    border-left: 6px solid var(--denim);
+    padding: 16px 22px;
+    line-height: 1.45;
+    margin-top: 8px;
+}
+
+.link {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    color: var(--mute);
+    margin-top: 26px;
+    word-break: break-all;
+}
+.link::before { content: "↗ "; color: var(--denim); }
+.link a, .source a { color: var(--denim); text-decoration: none; border-bottom: 1px solid var(--denim); }
+.link a:hover, .source a:hover { color: var(--navy); }
+
+/* =========================================================
+   COMMENT VOICES — red (Yibo) vs blue (Claude). No green/brown.
+   ========================================================= */
+/* Yibo — salmon fill, vermilion structure */
+.yb {
+    background: #DCEAF5;                 /* light denim wash — calm, readable for long text */
+    border-left: 10px solid var(--denim);
+    border-radius: 6px 16px 16px 6px;
+    padding: 26px 32px 28px;
+}
+.yb .who {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 16px;
+}
+.yb .avatar {
+    width: 56px; height: 56px; border-radius: 999px;
+    background: var(--navy); color: var(--wool);
+    font-family: var(--font-mono); font-weight: 600; font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    letter-spacing: 0.04em; flex: none;
+}
+.yb .label {
+    font-family: var(--font-mono); font-size: 21px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--navy);
+}
+.yb p { font-size: 31px; line-height: 1.4; color: #16223B; }
+.yb p + p { margin-top: 16px; }
+.yb .q { color: var(--navy); font-weight: 600; }
+/* .important — RESERVED for the 1-2 most important takes/day (the red treatment) */
+.yb.important { background: var(--salmon); border-left-color: var(--vermilion); }
+.yb.important .avatar { background: var(--vermilion); color: #fff; }
+.yb.important .label { color: var(--vermilion); }
+.yb.important p { color: #2A1410; }
+.yb.important .q { color: #7a1c20; font-weight: 400; }
+
+/* .dense — slightly smaller type for an over-stuffed slide so it fits the stage */
+.dense .headline { font-size: 50px; }
+.dense .source { font-size: 23px; margin-top: 14px; }
+.dense .body { margin-top: 16px; }
+.dense .info { font-size: 28px; }
+.dense .info .lead { font-size: 29px; }
+.dense .info ul { gap: 15px; }
+.dense .info li { padding-left: 36px; }
+.dense .yb p { font-size: 27px; }
+.dense .yb p + p { margin-top: 12px; }
+
+/* Claude — navy/denim, clearly the blue voice */
+.claude {
+    background: var(--navy);
+    border-left: 10px solid var(--denim);
+    border-radius: 6px 16px 16px 6px;
+    padding: 26px 34px 30px;
+}
+.claude .who { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.claude .avatar {
+    width: 56px; height: 56px; border-radius: 999px;
+    background: var(--denim); color: var(--navy);
+    font-family: var(--font-mono); font-weight: 600; font-size: 26px;
+    display: flex; align-items: center; justify-content: center; flex: none;
+}
+.claude .label {
+    font-family: var(--font-mono); font-size: 21px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--denim);
+}
+.claude p { font-size: 30px; line-height: 1.42; color: var(--wool); }
+.claude p + p { margin-top: 14px; }
+.claude b { color: var(--denim); font-weight: 700; }
+.claude .num {
+    color: var(--navy); background: var(--denim);
+    font-family: var(--font-mono); font-weight: 600; font-size: 21px;
+    border-radius: 999px; padding: 1px 12px; margin-right: 6px;
+    display: inline-block; line-height: 1.5;
+}
+
+/* =========================================================
+   STAT STRIP — big figures fill the stage for model items
+   ========================================================= */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px; }
+.stat {
+    background: #FBFAF7;
+    border: 2px solid var(--denim-22);
+    border-top: 6px solid var(--denim);
+    border-radius: 12px;
+    padding: 28px 28px 26px;
+}
+.stat .fig {
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 66px; line-height: 1;
+    color: var(--navy);
+}
+.stat .fig .u { font-size: 34px; color: var(--mute); font-weight: 500; }
+.stat .lab {
+    font-family: var(--font-mono); font-size: 21px; color: var(--mute);
+    margin-top: 14px; line-height: 1.35; letter-spacing: 0.01em;
+}
+.stat .lab b { color: var(--vermilion); font-weight: 600; }
+
+/* footer brand mark inside content slides */
+.footmark {
+    position: absolute; left: 110px; bottom: 34px;
+    font-family: var(--font-mono); font-size: 19px; color: var(--mute);
+    letter-spacing: 0.06em;
+}
+.footmark .fire { color: var(--vermilion); }
+
+/* =========================================================
+   TITLE SLIDE
+   ========================================================= */
+.title-slide { background: var(--wool); }
+.title-wrap {
+    position: absolute; inset: 0;
+    padding: 0 120px;
+    display: flex; flex-direction: column; justify-content: center;
+}
+.title-eyebrow {
+    font-family: var(--font-mono); font-size: 26px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--vermilion); font-weight: 600;
+    display: flex; align-items: center; gap: 18px;
+}
+.title-eyebrow .rule { width: 90px; height: 3px; background: var(--vermilion); }
+.title-main {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: 196px; line-height: 0.95; color: var(--navy);
+    letter-spacing: -0.02em; margin-top: 30px;
+}
+.title-main .hot { color: var(--vermilion); font-style: italic; }
+.title-sub {
+    font-family: var(--font-mono); font-size: 38px; color: var(--navy);
+    margin-top: 44px; letter-spacing: 0.01em;
+}
+.title-sub .accent { color: var(--vermilion); }
+.title-meta {
+    margin-top: 30px; display: flex; gap: 18px; align-items: center;
+    font-family: var(--font-mono); font-size: 24px; color: var(--mute);
+}
+.tag {
+    border: 2px solid var(--denim); border-radius: 999px;
+    padding: 8px 22px; color: var(--navy); letter-spacing: 0.04em;
+}
+.title-confid {
+    position: absolute; right: 120px; bottom: 76px;
+    font-family: var(--font-mono); font-size: 22px; color: var(--vermilion);
+    letter-spacing: 0.08em; text-align: right;
+}
+/* steam motif, restrained, top-right */
+.steam {
+    position: absolute; top: 120px; right: 150px; opacity: 0.85;
+}
+
+/* =========================================================
+   CLOSING SLIDE
+   ========================================================= */
+.closing { background: var(--navy); }
+.closing .pad { color: var(--wool); }
+.close-mark {
+    font-family: var(--font-display); font-weight: 600; font-size: 132px;
+    color: var(--wool); line-height: 0.98; letter-spacing: -0.02em;
+}
+.close-mark .hot { color: #F0A6A0; font-style: italic; }
+.close-rule { width: 180px; height: 4px; background: var(--vermilion); margin: 40px 0 44px; }
+.close-watch {
+    font-size: 38px; line-height: 1.4; color: var(--wool); max-width: 1500px;
+}
+.close-watch .k {
+    font-family: var(--font-mono); font-size: 24px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--denim); display: block; margin-bottom: 18px;
+}
+.close-watch b { color: #F0A6A0; font-weight: 700; }
+.close-foot {
+    position: absolute; left: 110px; bottom: 70px;
+    font-family: var(--font-mono); font-size: 24px; color: var(--denim);
+    letter-spacing: 0.06em;
+}
+.close-foot .red { color: #F0A6A0; }
+
+/* =========================================================
+   ENTRANCE ANIMATIONS — trigger via .visible on active slide
+   ========================================================= */
+.reveal {
+    opacity: 0; transform: translateY(26px);
+    transition: opacity var(--duration) var(--ease-out-expo),
+                transform var(--duration) var(--ease-out-expo);
+}
+.slide.visible .reveal { opacity: 1; transform: translateY(0); }
+.slide.visible .reveal:nth-child(1) { transition-delay: 0.05s; }
+.slide.visible .reveal:nth-child(2) { transition-delay: 0.13s; }
+.slide.visible .reveal:nth-child(3) { transition-delay: 0.21s; }
+.slide.visible .reveal:nth-child(4) { transition-delay: 0.29s; }
+.slide.visible .reveal:nth-child(5) { transition-delay: 0.37s; }
+.slide.visible .reveal:nth-child(6) { transition-delay: 0.45s; }
+
+/* =========================================================
+   DECK CHROME (outside the stage) — progress + page count
+   ========================================================= */
+.deck-controls {
+    display: flex; align-items: center; gap: 18px;
+    font-family: var(--font-mono); font-size: 16px; color: #cdd8ea;
+    background: rgba(10,23,48,0.72);
+    border: 1px solid rgba(128,179,210,0.35);
+    border-radius: 999px; padding: 8px 18px;
+    backdrop-filter: blur(4px);
+}
+.deck-controls .bar {
+    width: 220px; height: 5px; border-radius: 999px;
+    background: rgba(128,179,210,0.28); overflow: hidden;
+}
+.deck-controls .fill {
+    height: 100%; width: 0%; background: var(--vermilion);
+    border-radius: 999px; transition: width 0.4s var(--ease-out-expo);
+}
+.deck-controls .count { letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+    <!-- === SLIDE 1 — TITLE === -->
+    <section class="slide title-slide active">
+        <div class="title-wrap">
+            <div class="title-eyebrow reveal"><span class="rule"></span>Daily AI signal · served fresh</div>
+            <h1 class="title-main reveal">Hot from Kitchen</h1>
+            <p class="title-sub reveal">2026-06-24 <span class="accent">·</span> today's AI signal, fresh.</p>
+            <div class="title-meta reveal">
+                <span class="tag">7 posts</span>
+                <span class="tag">3 long reads</span>
+                <span>screened against taste.md · source over opinion</span>
+            </div>
+        </div>
+        <div class="title-confid reveal">Internal — not for external distribution</div>
+    </section>
+
+    <!-- === SLIDE 2 — CLAUDE TAG (TOP POST 01) === -->
+    <section class="slide dense">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Top post 01 · Launch</span>
+                <span class="index">02 / 13</span>
+            </div>
+            <h2 class="headline reveal">Claude Tag — Claude becomes a persistent, async Slack teammate</h2>
+            <p class="source reveal"><span class="h">@claudeai</span> · anthropic.com <span class="src">— grounded via VentureBeat &amp; SiliconANGLE</span></p>
+            <div class="body">
+                <div class="cols reveal" style="grid-template-columns: 1.12fr 0.88fr;">
+                    <div class="info">
+                        <ul>
+                            <li>Replaces the old "Claude in Slack" app with an <b>always-on agent that lives in channels</b> as a shared team member with its own service account.</li>
+                            <li>Admins define <b>separate Claude identities</b>, each scoped to specific channels, tools and data; <b>memory accumulates per channel across the whole team</b> instead of resetting each chat.</li>
+                            <li><b>Ambient mode:</b> it monitors assigned channels and jumps in unprompted — a reminder, a summary, context pulled from elsewhere in the company — and works <b>async over hours or days</b>.</li>
+                            <li>Beta today for <b>Enterprise &amp; Team</b>. Anthropic says its Claude Code team now writes <span class="em">~65%</span> of product code with Claude — incl. most of Claude Tag itself.</li>
+                        </ul>
+                        <p class="link"><a href="https://x.com/claudeai/status/2069468693017268244" target="_blank" rel="noopener">x.com/claudeai/status/2069468693017268244</a></p>
+                    </div>
+                    <div class="yb">
+                        <div class="who"><span class="avatar">YB</span><span class="label">Yibo's take</span></div>
+                        <p>actually started tagging Claude from docs like spec.md for months. (Anthropic should've paid me for this idea. lol.) I guess this is only natural for any Claude user with clear task assignment (what's for me and what's for Claude).</p>
+                        <p>For me, most of my work is done in that big, initial spec.md — my best practice is writing everything that needs to be built in a declarative tone (what it should look like, how it works, how users see it), and pointing out specifically how to build only when I know better than Claude (usually a preference thing, not a technical one) by tagging Claude.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 3 — KARPATHY FRAMING (TOP POST 02) === -->
+    <section class="slide">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Top post 02 · Framing</span>
+                <span class="index">03 / 13</span>
+            </div>
+            <h2 class="headline reveal">"The third LLM UI/UX paradigm"</h2>
+            <p class="source reveal"><span class="h">@karpathy</span> · <a href="https://x.com/karpathy/status/2069547676849557725" target="_blank" rel="noopener">x.com ↗</a> <span class="src">— his framing (post gated; quoted from the brief)</span></p>
+            <div class="body">
+                <div class="cols reveal" style="grid-template-columns: 1fr 1fr;">
+                    <div class="claude" style="border-left-color: var(--denim);">
+                        <div class="who"><span class="avatar" style="background:var(--denim);color:var(--navy);">K</span><span class="label" style="color:var(--denim);">The framing</span></div>
+                        <p>A mental model for where agent surfaces are heading:</p>
+                        <p style="font-family:var(--font-display);font-size:34px;line-height:1.25;color:var(--wool);">website → local app → a <b>self-contained, persistent, asynchronous entity</b> with org-wide tools &amp; memory, working alongside teams.</p>
+                        <p style="font-size:27px;color:var(--denim);">A take — but a substantive lens from a top source for the Claude Tag shift on the previous slide.</p>
+                    </div>
+                    <div class="yb">
+                        <div class="who"><span class="avatar">YB</span><span class="label">Yibo pushes back</span></div>
+                        <p>classic karpathy line. tearing the potato crisp bag in another fking direction is a 'paradigm shift'.</p>
+                        <p>i would argue that the real revolution here could be the contrary — <span class="q">not AI included in human's apps, but eating and including them instead.</span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 4 — SELF-HARNESS, THE CLAIM (TOP POST 03 + arXiv) === -->
+    <section class="slide">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Top post 03 · Paper</span>
+                <span class="index">04 / 13</span>
+            </div>
+            <h2 class="headline reveal">Self-Harness: agents that rewrite their own harness</h2>
+            <p class="source reveal"><span class="h">@hwchase17</span> · <a href="https://arxiv.org/abs/2606.09498" target="_blank" rel="noopener">arXiv 2606.09498 ↗</a> <span class="src">— Zhang et al. (read from source)</span></p>
+            <div class="body">
+                <div class="cols reveal" style="grid-template-columns: 1.08fr 0.92fr;">
+                    <div class="info">
+                        <ul>
+                            <li><b>Three-stage loop:</b> Weakness Mining (find model-specific failure patterns in traces) → Harness Proposal (diverse but <b>minimal</b> edits tied to those failures) → Proposal Validation (<b>accept only after regression testing</b>).</li>
+                            <li>Tested on <b>Terminal-Bench-2.0</b> across three families — MiniMax M2.5, Qwen3.5-35B-A3B, GLM-5.</li>
+                            <li>Held-out pass rates rise <span class="em">40.5→61.9%</span>, 23.8→38.1%, 42.9→57.1%. Weights frozen; only prompts/tools/policies change.</li>
+                        </ul>
+                        <p class="link"><a href="https://x.com/hwchase17/status/2069443268593537470" target="_blank" rel="noopener">x.com/hwchase17/status/2069443268593537470</a></p>
+                    </div>
+                    <div class="yb">
+                        <div class="who"><span class="avatar">YB</span><span class="label">Yibo's gut take</span></div>
+                        <p>will definitely dive in that original paper later but for now i am still gonna be that buzzkill. i don't trust the same model/agent with correcting and evolving itself, period. it's just code debugging, or AI slop that is literally '左右互搏'.</p>
+                        <p>I buy the <b style="color:var(--vermilion)">meta-harness</b> story (and practically build some of KC_CLI's module based on this idea), <span class="q">not the self-harness story</span>. let's see if the paper can convince me.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 5 — SELF-HARNESS, THE DEEP READ (Long read · YB + Claude) === -->
+    <section class="slide">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Long read · Deep dive</span>
+                <span class="index">05 / 13</span>
+            </div>
+            <h2 class="headline sm reveal">Does it actually generalize? Reading the fine print</h2>
+            <p class="source reveal"><span class="h">arXiv 2606.09498</span> <span class="src">— <a href="https://arxiv.org/abs/2606.09498" target="_blank" rel="noopener">Zhang et al. ↗</a></span></p>
+            <div class="body">
+                <div class="cols reveal" style="grid-template-columns: 0.82fr 1.18fr;">
+                    <div class="yb" style="align-self:stretch;">
+                        <div class="who"><span class="avatar">YB</span><span class="label">Yibo, in the paper</span></div>
+                        <p>Terminal-Bench ships deterministic verifiers. Good bench, good bench. So LLM is not the judge. naturally next question — <span class="q">what is preventing overfitting? 64 is a really small number in terms of sample size.</span></p>
+                        <p>...do have this feeling that we need to build our own bench for long-running knowledge-engineering tasks.</p>
+                    </div>
+                    <div class="claude">
+                        <div class="who"><span class="avatar">C</span><span class="label">Claude's read</span></div>
+                        <p>re: your overfit question — it's <b>not self-grading</b> (model proposes edits; a deterministic suite, not the model, accepts/rejects; weights frozen). So it's really <b>tuning the harness to a benchmark</b> — hyperparameter search, not self-evolution.</p>
+                        <p>And the held-out "ground truth" isn't 64, it's <b>21 tasks</b> (every % is k/42 = 21 × 2 attempts). That tiny set is reused as the accept/reject gate across many rounds → <b>textbook selection-overfitting</b>; both splits come from the same benchmark, so nothing proves it generalizes off Terminal-Bench.</p>
+                        <p>Net: it only works because the domain ships a hard verifier. Which makes your point the real lesson — for long-running KE, <b>the bench/verifier is the hard 80%</b>; the self-vs-meta loop is the easy part. Build the oracle, not the loop.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 6 — GLM-5.2 (TOP POST 04) === -->
+    <section class="slide">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Top post 04 · Open weights</span>
+                <span class="index">06 / 13</span>
+            </div>
+            <h2 class="headline reveal">GLM-5.2 tops open coding leaderboards — at ~1/6 the cost</h2>
+            <p class="source reveal"><span class="h">Z.ai (Zhipu)</span> · MIT weights on <a href="https://huggingface.co/zai-org/GLM-5.2" target="_blank" rel="noopener">Hugging Face ↗</a> <span class="src">— grounded via <a href="https://venturebeat.com/technology/z-ais-open-weights-glm-5-2-beats-gpt-5-5-on-multiple-long-horizon-coding-benchmarks-for-1-6th-the-cost" target="_blank" rel="noopener">VentureBeat ↗</a></span></p>
+            <div class="body">
+                <div class="stats reveal">
+                    <div class="stat"><div class="fig">62.1</div><div class="lab">SWE-bench Pro<br><b>vs GPT-5.5 58.6</b></div></div>
+                    <div class="stat"><div class="fig">74.4<span class="u">%</span></div><div class="lab">FrontierSWE<br>GPT-5.5 72.6 · Opus 4.8 75.1</div></div>
+                    <div class="stat"><div class="fig">81.0</div><div class="lab">Terminal-Bench 2.1<br><b>first open weights &gt; 80</b></div></div>
+                    <div class="stat"><div class="fig">~1/6</div><div class="lab">the cost<br>$5.80 vs ~$35 / 1M tok</div></div>
+                </div>
+                <p class="spec reveal" style="margin-top:26px;">753B MoE · ~40B active · 1M context · MIT license · zai-org/GLM-5.2 on Hugging Face</p>
+                <div class="yb reveal" style="margin-top:28px;">
+                    <div class="who"><span class="avatar">YB</span><span class="label">Yibo's take</span></div>
+                    <p>praising GLM's new model on X apparently is a new engagement bait. won't let me buy the coding plan, won't let me buy the stock. haven't test 5.2 on any tasks at production level. nothing useful to comment here. <span class="q">LLM benchmarks are rigged, LLM benchmarks like SWE is already rigged as fk. cheatsheet for SWE is probably 99 cents on temu.</span></p>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 7 — AISLE VULN-FINDING (TOP POST 05) === -->
+    <section class="slide">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Top post 05 · Security</span>
+                <span class="index">07 / 13</span>
+            </div>
+            <h2 class="headline reveal">Small open model + structured search holds its own at vuln-finding</h2>
+            <p class="source reveal"><span class="h">@goodfellow_ian</span> on AISLE · <a href="https://github.com/weareaisle/nano-analyzer" target="_blank" rel="noopener">github.com/weareaisle/nano-analyzer ↗</a> <span class="src">— grounded via friendli.ai</span></p>
+            <div class="body">
+                <div class="cols reveal" style="grid-template-columns: 1.05fr 0.95fr;">
+                    <div class="info">
+                        <ul>
+                            <li>AISLE's <b>nano-analyzer</b> hunts zero-days function-by-function via a three-stage LLM pipeline: <b>context generation → vulnerability scan → skeptical triage</b>; outputs structured Markdown/JSON for human review.</li>
+                            <li>Heuristics tuned for <b>C/C++ memory safety</b> — buffer overflows, NULL derefs, integer overflows, type confusion.</li>
+                            <li>The claim: <span class="em">"matched Mythos on public zero-days with CVEs using widely available &amp; open-source-derived models &amp; can run it air-gapped if needed."</span> A cost result, not a superlative.</li>
+                        </ul>
+                        <p class="link"><a href="https://x.com/goodfellow_ian/status/2069524601852612708" target="_blank" rel="noopener">x.com/goodfellow_ian/status/2069524601852612708</a></p>
+                    </div>
+                    <div class="yb">
+                        <div class="who"><span class="avatar">YB</span><span class="label">Yibo's take</span></div>
+                        <p>yes, yes, yes. Good morning Dario, good morning Boris. I'm glad that you guys received my request, and if not, here it is —</p>
+                        <p class="q">Can I have a Mythos-grade verifier, but for knowledge engineering and domain business analysis? And no, it has nothing to do with either John or KC.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 8 — ASSEMBLYAI UNIVERSAL (TOP POST 06) === -->
+    <section class="slide">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Top post 06 · Voice</span>
+                <span class="index">08 / 13</span>
+            </div>
+            <h2 class="headline reveal">ASR that's conditioned on the dialogue turn</h2>
+            <p class="source reveal"><span class="h">@AssemblyAI</span> · Universal-3 Pro Streaming <span class="src">— grounded via AssemblyAI docs/blog</span></p>
+            <div class="body">
+                <div class="cols reveal" style="grid-template-columns: 1.05fr 0.95fr;">
+                    <div class="info">
+                        <ul>
+                            <li>Built on <b>Turn objects + immutable transcripts</b> — each Turn maps to a speaking turn in a voice-agent dialogue, with intelligent endpointing and audio-cue turn detection.</li>
+                            <li><b>Keyterms prompting:</b> feed a live list of domain terms (up to ~100) over the same socket, updated turn-by-turn, to lock in the words that matter.</li>
+                            <li><span class="em">~8.1% WER</span> — lowest among streaming providers; a concrete inference-layer win for voice agents.</li>
+                        </ul>
+                        <p class="link"><a href="https://x.com/AssemblyAI/status/2069485982483919347" target="_blank" rel="noopener">x.com/AssemblyAI/status/2069485982483919347</a></p>
+                    </div>
+                    <div class="yb">
+                        <div class="who"><span class="avatar">YB</span><span class="label">Yibo's take</span></div>
+                        <p>not sure if it is "the first realtime speech-to-text model", but absolutely sure that it is not the first one claiming so. not our domain, so nothing valuable from me.</p>
+                        <p>although reducing error rate from 26% to 9% looks nice, <span class="q">9% on its own is still not usable. that's 1 from 11 digit cell phone number.</span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 9 — eve, THE FRAMEWORK (TOP POST 07 + Vercel) === -->
+    <section class="slide">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Top post 07 · Framework</span>
+                <span class="index">09 / 13</span>
+            </div>
+            <h2 class="headline reveal">eve: Vercel's filesystem-first agent framework</h2>
+            <p class="source reveal"><span class="h">@omarsar0</span> · <a href="https://vercel.com/blog/introducing-eve" target="_blank" rel="noopener">vercel.com/blog/introducing-eve ↗</a> <span class="src">— read from source</span></p>
+            <div class="body">
+                <div class="cols reveal" style="grid-template-columns: 1.08fr 0.92fr;">
+                    <div class="info">
+                        <ul>
+                            <li><b>An agent is a directory:</b> instructions + skills as markdown, tools as TypeScript (<span class="spec" style="display:inline;padding:2px 8px;font-size:21px;">defineTool</span> + Zod schemas), evals as scored CI suites. eve picks up tools/skills <b>at build time</b> — like Next.js routing from file structure.</li>
+                            <li>Core premise: <span class="em">"agents have a shape"</span> — a recurring structure across implementations, formalized so teams stop rebuilding the same plumbing.</li>
+                        </ul>
+                        <p class="link"><a href="https://x.com/omarsar0/status/2069455656214532137" target="_blank" rel="noopener">x.com/omarsar0/status/2069455656214532137</a></p>
+                    </div>
+                    <div class="yb">
+                        <div class="who"><span class="avatar">YB</span><span class="label">Yibo's take</span></div>
+                        <p><b style="color:var(--vermilion)">writing is the new coding.</b> make no mistake, this is not the same thing with vibe coding per say.</p>
+                        <p class="q">writing in good structure is no easier task than coding.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 10 — eve, BATTERIES INCLUDED (Long read · Vercel) === -->
+    <section class="slide">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Long read · Deep dive</span>
+                <span class="index">10 / 13</span>
+            </div>
+            <h2 class="headline sm reveal">Batteries included — the skeleton every agent ships with</h2>
+            <p class="source reveal"><span class="h">Vercel</span> · <a href="https://vercel.com/blog/introducing-eve" target="_blank" rel="noopener">"Introducing eve" ↗</a> <span class="src">— production capabilities, read from source</span></p>
+            <div class="body">
+                <div class="cols reveal" style="grid-template-columns: 1fr 1fr;">
+                    <div class="info">
+                        <ul>
+                            <li><b>Durable execution</b> — sessions checkpoint each step, resuming "exactly where it stopped" across crashes/deploys.</li>
+                            <li><b>Sandboxed compute</b> — agent-generated code runs isolated from the app runtime.</li>
+                            <li><b>Subagents</b> — parent delegates to children with scoped tools + clean contexts.</li>
+                            <li><b>Tracing</b> — "every run produces a trace," OpenTelemetry-compatible spans.</li>
+                        </ul>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:22px;">
+                        <div class="yb">
+                            <div class="who"><span class="avatar">YB</span><span class="label">Yibo · the abstraction</span></div>
+                            <p>"...the same structure kept emerging... agents have a shape... Every generation of software earns its abstractions once enough people have built the same thing the hard way." good takeaway — <span class="q">i had similar thoughts when starting to build KC and John.</span></p>
+                        </div>
+                        <div class="yb">
+                            <div class="who"><span class="avatar">YB</span><span class="label">Yibo · for the team</span></div>
+                            <p>the "batteries included" list is practically the skeleton every harness needs, especially file-system-based ones. <span class="q">for team members doing the homework of building a harness from scratch instead of on top of Claude Code — this is a good reference.</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 11 — NEMOTRON 3 ULTRA, WHAT IT IS (Long read · NVIDIA) === -->
+    <section class="slide">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Long read · Infra</span>
+                <span class="index">11 / 13</span>
+            </div>
+            <h2 class="headline reveal">Nemotron 3 Ultra — efficient reasoning for long-running agents</h2>
+            <p class="source reveal"><span class="h"><a href="https://developer.nvidia.com/blog/nvidia-nemotron-3-ultra-powers-faster-more-efficient-reasoning-for-long-running-agents/" target="_blank" rel="noopener">NVIDIA Technical Blog ↗</a></span> <span class="src">— read from source</span></p>
+            <div class="body">
+                <div class="stats reveal">
+                    <div class="stat"><div class="fig">550<span class="u">B</span></div><div class="lab">params · <b>55B active</b><br>hybrid Mamba-2 + Transformer MoE</div></div>
+                    <div class="stat"><div class="fig">1<span class="u">M</span></div><div class="lab">context<br><b>95% on Ruler @1M</b></div></div>
+                    <div class="stat"><div class="fig">~5×</div><div class="lab">throughput<br>vs open peers in class</div></div>
+                    <div class="stat"><div class="fig">1,448</div><div class="lab">GDPval-AA<br>"knowledge work" score</div></div>
+                </div>
+                <p class="spec reveal" style="margin-top:24px;">Trained on 10T tokens (+212B domain, +173B GitHub thru Sep 30 2025) · demo: autonomous assistant with Hermes Agent — plan → call tools → delegate → validate → recover</p>
+                <div class="yb reveal" style="margin-top:26px;">
+                    <div class="who"><span class="avatar">YB</span><span class="label">Yibo's questions</span></div>
+                    <p>Knowledge Work GDPVal-AA, worth looking. actually haven't thought it would be Nvidia doing this work — <span class="q">did Nvidia's model training give us anything great in the past 6 months?</span> And what is Nvidia's edge here — what specifically makes you think <span class="q">only Nvidia</span> can do this? cost?</p>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 12 — NEMOTRON, CLAUDE'S READ === -->
+    <section class="slide">
+        <div class="pad">
+            <div class="topbar reveal">
+                <span class="kicker"><span class="dot"></span>Long read · Claude's read</span>
+                <span class="index">12 / 13</span>
+            </div>
+            <h2 class="headline sm reveal">Read it as an ad for GPUs that happens to be a decent model</h2>
+            <div class="body">
+                <div class="claude reveal" style="padding:32px 44px 36px;">
+                    <div class="who"><span class="avatar">C</span><span class="label">Claude answers Yibo's three questions</span></div>
+                    <p><span class="num">1</span><b>Anything great from NVIDIA?</b> As <b>infra</b>, yes — their real product is being the ecosystem's synthetic-data engine + the hybrid Mamba/Transformer line (others train on their data/recipes). As a <b>model you'd actually pick</b>, no: on GDPval-AA it trails frontier and trails GLM-5.1 / Kimi among open models. Great data-lab, mid-pack model.</p>
+                    <p><span class="num">2</span><b>The edge isn't intelligence — it's inference economics on their own silicon:</b> ~5× throughput/GPU via NVFP4 on Blackwell, ~30% cheaper-to-task, model↔kernel↔runtime co-designed as one stack.</p>
+                    <p><span class="num">3</span><b>Why "only NVIDIA"? Technically nothing</b> — hybrid-Mamba is public; Google/Meta have the compute. The moat is vertical integration + <b>motive</b>: the model is GPU demand-gen, basically a loss-leader. "Long-running agents" is the showcase <b>because</b> long agents burn the most tokens = the most reason to buy Blackwell.</p>
+                    <p style="color:var(--mute);font-size:27px;">Net: judge it on inference cost, not capability. (Side note: GDPval-AA is the closest public "knowledge-work bench" to the Mythos-grade verifier Yibo wanted — but it's expert/Elo-judged, a soft eval, not a hard oracle.)</p>
+                </div>
+            </div>
+            <div class="footmark"><span class="fire">●</span> Hot from Kitchen · 2026-06-24</div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 13 — CLOSING === -->
+    <section class="slide closing">
+        <div class="pad">
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+                <div class="close-mark reveal">Hot from Kitchen</div>
+                <div class="close-rule reveal"></div>
+                <div class="close-watch reveal">
+                    <span class="k">What to watch</span>
+                    Whether self-improving harnesses hold up <b>off-benchmark</b> — and whether open weights (GLM-5.2, Nemotron) keep closing the gap on <b>cost</b>, not just scores. The recurring thread today: the <b>verifier</b> is the hard part, not the loop.
+                </div>
+            </div>
+            <div class="close-foot reveal">2026-06-24 · today's AI signal, fresh &nbsp;<span class="red">·</span>&nbsp; Internal — not for external distribution</div>
+        </div>
+    </section>
+
+</main>
+</div>
+
+<!-- Deck chrome: progress bar + page count (outside the 16:9 stage) -->
+<div class="deck-controls">
+    <div class="bar"><div class="fill" id="progressFill"></div></div>
+    <span class="count" id="pageCount">1 / 13</span>
+</div>
+
+<script>
+/* =========================================================
+   SLIDE PRESENTATION CONTROLLER
+   - Fixed 16:9 stage scaling (letterbox/pillarbox, never reflow)
+   - Keyboard / wheel / touch navigation
+   - Progress bar + page counter
+   To add a slide: drop another <section class="slide"> in the
+   stage; counts and progress update automatically.
+   ========================================================= */
+class SlidePresentation {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.stage = document.getElementById('deckStage');
+        this.fill = document.getElementById('progressFill');
+        this.count = document.getElementById('pageCount');
+        this.current = 0;
+        this.wheelLock = false;
+        this.setupStageScale();
+        this.setupKeyboardNav();
+        this.setupWheelNav();
+        this.setupTouchNav();
+        this.show(0);
+    }
+
+    /* Scale the whole 1920×1080 stage to fit the window */
+    setupStageScale() {
+        const scale = () => {
+            const factor = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            const x = (window.innerWidth - 1920 * factor) / 2;
+            const y = (window.innerHeight - 1080 * factor) / 2;
+            this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+        };
+        scale();
+        window.addEventListener('resize', scale);
+    }
+
+    setupKeyboardNav() {
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown':
+                    e.preventDefault(); this.next(); break;
+                case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+                    e.preventDefault(); this.prev(); break;
+                case 'Home': e.preventDefault(); this.show(0); break;
+                case 'End': e.preventDefault(); this.show(this.slides.length - 1); break;
+            }
+        });
+    }
+
+    /* Debounced wheel so one gesture = one slide */
+    setupWheelNav() {
+        window.addEventListener('wheel', (e) => {
+            if (this.wheelLock) return;
+            if (Math.abs(e.deltaY) < 18) return;
+            this.wheelLock = true;
+            (e.deltaY > 0) ? this.next() : this.prev();
+            setTimeout(() => { this.wheelLock = false; }, 650);
+        }, { passive: true });
+    }
+
+    setupTouchNav() {
+        let startX = 0, startY = 0;
+        window.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+        }, { passive: true });
+        window.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].clientX - startX;
+            const dy = e.changedTouches[0].clientY - startY;
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                (dx < 0) ? this.next() : this.prev();
+            }
+        }, { passive: true });
+    }
+
+    next() { this.show(this.current + 1); }
+    prev() { this.show(this.current - 1); }
+
+    show(index) {
+        this.current = Math.max(0, Math.min(index, this.slides.length - 1));
+        this.slides.forEach((slide, i) => {
+            const on = i === this.current;
+            slide.classList.toggle('active', on);
+            slide.classList.toggle('visible', on);
+        });
+        const total = this.slides.length;
+        this.count.textContent = `${this.current + 1} / ${total}`;
+        this.fill.style.width = `${((this.current + 1) / total) * 100}%`;
+    }
+}
+
+new SlidePresentation();
+</script>
+</body>
+</html>

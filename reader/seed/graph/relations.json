@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "relations": [
+    { "id": "r_0001", "src": "e_claude_tag", "dst": "e_anthropic", "type": "made_by", "evidence": "p_20260624_02", "date": "2026-06-24" },
+    { "id": "r_0002", "src": "e_claude_code", "dst": "e_anthropic", "type": "made_by", "evidence": "p_20260624_02", "date": "2026-06-24" },
+    { "id": "r_0003", "src": "e_claude_tag", "dst": "e_claude_in_slack", "type": "replaces", "evidence": "p_20260624_02", "date": "2026-06-24" },
+    { "id": "r_0004", "src": "e_claude_tag", "dst": "e_ambient_mode", "type": "uses", "evidence": "p_20260624_02", "date": "2026-06-24" },
+    { "id": "r_0005", "src": "e_claude_tag", "dst": "e_third_paradigm", "type": "illustrates", "evidence": "p_20260624_03", "date": "2026-06-24", "note": "The brief frames Claude Tag as the embodiment of Karpathy's third-paradigm shift." },
+    { "id": "r_0006", "src": "e_third_paradigm", "dst": "e_karpathy", "type": "framed_by", "evidence": "p_20260624_03", "date": "2026-06-24" },
+
+    { "id": "r_0007", "src": "e_self_harness", "dst": "e_harrison_chase", "type": "surfaced_by", "evidence": "p_20260624_04", "date": "2026-06-24" },
+    { "id": "r_0008", "src": "e_self_harness", "dst": "e_terminal_bench", "type": "benchmarked_on", "evidence": "p_20260624_04", "date": "2026-06-24" },
+    { "id": "r_0009", "src": "e_self_harness", "dst": "e_glm_5", "type": "tested_on_model", "evidence": "p_20260624_04", "date": "2026-06-24" },
+    { "id": "r_0010", "src": "p_20260624_05", "dst": "p_20260624_04", "type": "responds_to", "evidence": "p_20260624_05", "date": "2026-06-24", "note": "Deep-dive reading the fine print of the Self-Harness paper." },
+    { "id": "r_0011", "src": "e_self_harness", "dst": "e_verifier_is_hard", "type": "supports_thesis", "evidence": "p_20260624_05", "date": "2026-06-24", "note": "Works only because Terminal-Bench ships a hard verifier — build the oracle, not the loop." },
+
+    { "id": "r_0012", "src": "e_glm_5_2", "dst": "e_zai", "type": "made_by", "evidence": "p_20260624_06", "date": "2026-06-24" },
+    { "id": "r_0013", "src": "e_glm_5_2", "dst": "e_swe_bench_pro", "type": "benchmarked_on", "evidence": "p_20260624_06", "date": "2026-06-24" },
+    { "id": "r_0014", "src": "e_glm_5_2", "dst": "e_frontier_swe", "type": "benchmarked_on", "evidence": "p_20260624_06", "date": "2026-06-24" },
+    { "id": "r_0015", "src": "e_glm_5_2", "dst": "e_terminal_bench", "type": "benchmarked_on", "evidence": "p_20260624_06", "date": "2026-06-24" },
+    { "id": "r_0016", "src": "e_glm_5_2", "dst": "e_gpt_5_5", "type": "competes_with", "evidence": "p_20260624_06", "date": "2026-06-24" },
+    { "id": "r_0017", "src": "e_glm_5_2", "dst": "e_opus_4_8", "type": "competes_with", "evidence": "p_20260624_06", "date": "2026-06-24" },
+
+    { "id": "r_0018", "src": "e_nano_analyzer", "dst": "e_aisle", "type": "made_by", "evidence": "p_20260624_07", "date": "2026-06-24" },
+    { "id": "r_0019", "src": "e_nano_analyzer", "dst": "e_mythos", "type": "matches", "evidence": "p_20260624_07", "date": "2026-06-24", "note": "Claims to match Mythos on public zero-day CVEs using open models." },
+    { "id": "r_0020", "src": "e_nano_analyzer", "dst": "e_ian_goodfellow", "type": "surfaced_by", "evidence": "p_20260624_07", "date": "2026-06-24" },
+
+    { "id": "r_0021", "src": "e_universal_3_pro", "dst": "e_assemblyai", "type": "made_by", "evidence": "p_20260624_08", "date": "2026-06-24" },
+    { "id": "r_0022", "src": "e_universal_3_pro", "dst": "e_keyterms_prompting", "type": "uses", "evidence": "p_20260624_08", "date": "2026-06-24" },
+
+    { "id": "r_0023", "src": "e_eve", "dst": "e_vercel", "type": "made_by", "evidence": "p_20260624_09", "date": "2026-06-24" },
+    { "id": "r_0024", "src": "e_eve", "dst": "e_elvis", "type": "surfaced_by", "evidence": "p_20260624_09", "date": "2026-06-24" },
+    { "id": "r_0025", "src": "e_eve", "dst": "e_agent_has_shape", "type": "embodies", "evidence": "p_20260624_09", "date": "2026-06-24" },
+    { "id": "r_0026", "src": "e_eve", "dst": "e_durable_execution", "type": "uses", "evidence": "p_20260624_10", "date": "2026-06-24" },
+
+    { "id": "r_0027", "src": "e_nemotron_3_ultra", "dst": "e_nvidia", "type": "made_by", "evidence": "p_20260624_11", "date": "2026-06-24" },
+    { "id": "r_0028", "src": "e_nemotron_3_ultra", "dst": "e_ruler", "type": "benchmarked_on", "evidence": "p_20260624_11", "date": "2026-06-24" },
+    { "id": "r_0029", "src": "e_nemotron_3_ultra", "dst": "e_gdpval_aa", "type": "benchmarked_on", "evidence": "p_20260624_11", "date": "2026-06-24" },
+    { "id": "r_0030", "src": "e_nemotron_3_ultra", "dst": "e_hermes_agent", "type": "uses", "evidence": "p_20260624_11", "date": "2026-06-24" },
+    { "id": "r_0031", "src": "p_20260624_12", "dst": "p_20260624_11", "type": "responds_to", "evidence": "p_20260624_12", "date": "2026-06-24", "note": "Claude answers Yibo's three questions about Nemotron/NVIDIA." },
+    { "id": "r_0032", "src": "e_nemotron_3_ultra", "dst": "e_glm_5_1", "type": "competes_with", "evidence": "p_20260624_12", "date": "2026-06-24", "note": "Trails GLM-5.1 on GDPval-AA among open models." },
+    { "id": "r_0033", "src": "e_nemotron_3_ultra", "dst": "e_nvfp4", "type": "uses", "evidence": "p_20260624_12", "date": "2026-06-24", "note": "~5× throughput via NVFP4 on Blackwell — the real edge." },
+
+    { "id": "r_0034", "src": "e_jalapeno", "dst": "e_openai", "type": "made_by", "evidence": "p_20260625_01", "date": "2026-06-25" },
+    { "id": "r_0035", "src": "e_jalapeno", "dst": "e_broadcom", "type": "co_built_with", "evidence": "p_20260625_01", "date": "2026-06-25" },
+    { "id": "r_0036", "src": "e_jalapeno", "dst": "e_nvidia", "type": "competes_with", "evidence": "p_20260625_01", "date": "2026-06-25", "note": "Lab fabbing its own serving silicon puts Nvidia's pricing power on the table." },
+
+    { "id": "r_0037", "src": "e_clay", "dst": "e_langchain", "type": "surfaced_by", "evidence": "p_20260625_02", "date": "2026-06-25" },
+    { "id": "r_0038", "src": "e_noop_test", "dst": "e_matt_pocock", "type": "proposed_by", "evidence": "p_20260625_03", "date": "2026-06-25" },
+
+    { "id": "r_0039", "src": "e_applied_compute", "dst": "e_harvey", "type": "collaborates_with", "evidence": "p_20260625_04", "date": "2026-06-25" },
+    { "id": "r_0040", "src": "e_applied_compute", "dst": "e_glm_5_1", "type": "post_trained", "evidence": "p_20260625_04", "date": "2026-06-25", "note": "Full-parameter RL on GLM-5.1 for the legal agent." },
+    { "id": "r_0041", "src": "e_lab", "dst": "e_harvey", "type": "made_by", "evidence": "p_20260625_05", "date": "2026-06-25" },
+    { "id": "r_0042", "src": "e_glm_5_1", "dst": "e_lab", "type": "benchmarked_on", "evidence": "p_20260625_06", "date": "2026-06-25", "note": "Post-trained GLM-5.1 hits 0.913 rubric pass, beating Opus 4.8 Max & GPT-5.5 xhigh." },
+    { "id": "r_0043", "src": "e_lab", "dst": "e_gpt_5_5", "type": "uses_grader", "evidence": "p_20260625_06", "date": "2026-06-25", "note": "Frontier consensus grader." },
+    { "id": "r_0044", "src": "e_lab", "dst": "e_opus_4_8", "type": "uses_grader", "evidence": "p_20260625_06", "date": "2026-06-25", "note": "Frontier consensus grader." },
+
+    { "id": "r_0045", "src": "e_critique_agent_model", "dst": "e_eric_xing", "type": "authored_by", "evidence": "p_20260625_07", "date": "2026-06-25" },
+    { "id": "r_0046", "src": "e_critique_agent_model", "dst": "e_elvis", "type": "surfaced_by", "evidence": "p_20260625_07", "date": "2026-06-25" },
+    { "id": "r_0047", "src": "e_critique_agent_model", "dst": "e_agentic_vs_agentive", "type": "introduces", "evidence": "p_20260625_07", "date": "2026-06-25" },
+
+    { "id": "r_0048", "src": "e_nvfp4", "dst": "e_kv_cache", "type": "applied_to", "evidence": "p_20260625_08", "date": "2026-06-25", "note": "4-bit KV cache — same context, a quarter of the memory." },
+    { "id": "r_0049", "src": "e_vllm", "dst": "e_flashinfer", "type": "uses", "evidence": "p_20260625_08", "date": "2026-06-25" },
+    { "id": "r_0050", "src": "e_vllm", "dst": "e_nvfp4", "type": "uses", "evidence": "p_20260625_08", "date": "2026-06-25" },
+
+    { "id": "r_0051", "src": "e_yibo", "dst": "e_john", "type": "builds", "evidence": "p_20260624_07", "date": "2026-06-24" },
+    { "id": "r_0052", "src": "e_yibo", "dst": "e_kc", "type": "builds", "evidence": "p_20260624_04", "date": "2026-06-24" },
+
+    { "id": "r_0053", "src": "e_verifier_is_hard", "dst": "e_mythos", "type": "same_thread_as", "evidence": "p_20260624_07", "date": "2026-06-24", "note": "Yibo's wish for a 'Mythos-grade verifier' for knowledge engineering." },
+    { "id": "r_0054", "src": "e_mythos", "dst": "e_gdpval_aa", "type": "same_thread_as", "evidence": "p_20260624_12", "date": "2026-06-24", "note": "GDPval-AA is the closest public knowledge-work bench to the Mythos-grade verifier Yibo wanted — but a soft eval, not a hard oracle." },
+    { "id": "r_0055", "src": "e_verifier_is_hard", "dst": "e_lab", "type": "same_thread_as", "evidence": "p_20260625_05", "date": "2026-06-25", "note": "Cross-day: 'build the oracle' thread — Harvey's 75k-criteria rubric IS the hard oracle Yibo wanted; you own the benchmark." },
+    { "id": "r_0056", "src": "e_verifier_is_hard", "dst": "e_john", "type": "same_thread_as", "evidence": "p_20260625_04", "date": "2026-06-25", "note": "Recurring domain-build lens: for John you own the benchmark + harness, only rent the weights." },
+    { "id": "r_0057", "src": "e_self_harness", "dst": "e_agentic_vs_agentive", "type": "same_thread_as", "evidence": "p_20260625_07", "date": "2026-06-25", "note": "Cross-day: 'delete the harness — if the behavior vanishes it was never agentive' echoes the self-vs-meta-harness debate." },
+    { "id": "r_0058", "src": "e_nemotron_3_ultra", "dst": "e_nvfp4", "type": "same_thread_as", "evidence": "p_20260625_08", "date": "2026-06-25", "note": "Cross-day Blackwell inference-economics thread: NVFP4 throughput (06-24) → NVFP4 KV cache (06-25)." }
+  ]
+}

@@ -21,10 +21,12 @@
       "electron-preload.js",
       "package.json",
       "public/**/*",
+      "reader/**/*",
       "node_modules/**/*"
     ],
     "asarUnpack": [
       "server.js",
+      "reader/**/*",
       "node_modules/**/*"
     ],
     "mac": {

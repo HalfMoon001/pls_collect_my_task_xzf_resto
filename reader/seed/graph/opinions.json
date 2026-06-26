@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "opinions": [
+    { "id": "o_p20260624_02_yibo", "holder": "yibo", "post_id": "p_20260624_02", "label": "Yibo's take", "stance": "supportive", "about": ["e_claude_tag", "e_claude_code"], "date": "2026-06-24",
+      "text": "Actually started tagging Claude from docs like spec.md for months. (Anthropic should've paid me for this idea. lol.) Natural for any Claude user with clear task assignment (what's for me vs for Claude). Best practice: write everything to be built in a declarative tone in the big initial spec.md, and only point out how to build when you know better than Claude (usually a preference, not technical) by tagging Claude." },
+
+    { "id": "o_p20260624_03_yibo", "holder": "yibo", "post_id": "p_20260624_03", "label": "Yibo pushes back", "stance": "pushback", "about": ["e_third_paradigm", "e_karpathy"], "date": "2026-06-24",
+      "text": "Classic karpathy line. Tearing the potato crisp bag in another fking direction is a 'paradigm shift'. I'd argue the real revolution could be the contrary — not AI included in human's apps, but eating and including them instead." },
+
+    { "id": "o_p20260624_04_yibo", "holder": "yibo", "post_id": "p_20260624_04", "label": "Yibo's gut take", "stance": "skeptical", "about": ["e_self_harness", "e_meta_vs_self_harness", "e_kc"], "date": "2026-06-24",
+      "text": "Will dive into the paper later, but for now I'm the buzzkill. I don't trust the same model/agent correcting and evolving itself, period — it's just code debugging, or AI slop that is literally '左右互搏'. I buy the meta-harness story (built some of KC_CLI's modules on it), not the self-harness story. Let's see if the paper convinces me." },
+
+    { "id": "o_p20260624_05_yibo", "holder": "yibo", "post_id": "p_20260624_05", "label": "Yibo, in the paper", "stance": "skeptical", "about": ["e_terminal_bench", "e_verifier_is_hard"], "date": "2026-06-24",
+      "text": "Terminal-Bench ships deterministic verifiers — so the LLM is not the judge. Naturally next question: what prevents overfitting? 64 is a really small sample size. I do feel we need to build our own bench for long-running knowledge-engineering tasks." },
+    { "id": "o_p20260624_05_claude", "holder": "claude", "post_id": "p_20260624_05", "label": "Claude's read", "stance": "mixed", "about": ["e_self_harness", "e_terminal_bench", "e_verifier_is_hard"], "date": "2026-06-24",
+      "text": "It's not self-grading (a deterministic suite accepts/rejects; weights frozen) — so it's tuning the harness to a benchmark, i.e. hyperparameter search. The held-out ground truth isn't 64, it's 21 tasks reused as the gate across rounds → textbook selection-overfitting; both splits come from the same benchmark, so nothing proves off-Terminal-Bench generalization. It works only because the domain ships a hard verifier. The real lesson: for long-running KE the bench/verifier is the hard 80%. Build the oracle, not the loop." },
+
+    { "id": "o_p20260624_06_yibo", "holder": "yibo", "post_id": "p_20260624_06", "label": "Yibo's take", "stance": "skeptical", "about": ["e_glm_5_2", "e_swe_bench_pro"], "date": "2026-06-24",
+      "text": "Praising GLM's new model on X is apparently a new engagement bait. Won't let me buy the coding plan, won't let me buy the stock. Haven't tested 5.2 on production tasks. LLM benchmarks are rigged — SWE especially; the cheatsheet for SWE is probably 99 cents on temu." },
+
+    { "id": "o_p20260624_07_yibo", "holder": "yibo", "post_id": "p_20260624_07", "label": "Yibo's take", "stance": "supportive", "about": ["e_mythos", "e_verifier_is_hard", "e_john", "e_kc"], "date": "2026-06-24",
+      "text": "Yes, yes, yes. Good morning Dario, good morning Boris. Here's my request — can I have a Mythos-grade verifier, but for knowledge engineering and domain business analysis? And no, it has nothing to do with either John or KC." },
+
+    { "id": "o_p20260624_08_yibo", "holder": "yibo", "post_id": "p_20260624_08", "label": "Yibo's take", "stance": "skeptical", "about": ["e_universal_3_pro"], "date": "2026-06-24",
+      "text": "Not sure it's 'the first realtime speech-to-text model', but sure it's not the first to claim so. Not our domain. Reducing error rate from 26% to 9% looks nice, but 9% on its own is still not usable — that's 1 wrong digit in an 11-digit phone number." },
+
+    { "id": "o_p20260624_09_yibo", "holder": "yibo", "post_id": "p_20260624_09", "label": "Yibo's take", "stance": "supportive", "about": ["e_eve", "e_agent_has_shape"], "date": "2026-06-24",
+      "text": "Writing is the new coding. Make no mistake, this is not the same as vibe coding — writing in good structure is no easier than coding." },
+
+    { "id": "o_p20260624_10_yibo1", "holder": "yibo", "post_id": "p_20260624_10", "label": "Yibo · the abstraction", "stance": "supportive", "about": ["e_agent_has_shape", "e_john", "e_kc"], "date": "2026-06-24",
+      "text": "'...the same structure kept emerging... agents have a shape... Every generation of software earns its abstractions once enough people have built the same thing the hard way.' Good takeaway — I had similar thoughts when starting to build KC and John." },
+    { "id": "o_p20260624_10_yibo2", "holder": "yibo", "post_id": "p_20260624_10", "label": "Yibo · for the team", "stance": "supportive", "about": ["e_eve", "e_durable_execution"], "date": "2026-06-24",
+      "text": "The 'batteries included' list is practically the skeleton every harness needs, especially file-system-based ones. For team members building a harness from scratch instead of on top of Claude Code — a good reference." },
+
+    { "id": "o_p20260624_11_yibo", "holder": "yibo", "post_id": "p_20260624_11", "label": "Yibo's questions", "stance": "skeptical", "about": ["e_nemotron_3_ultra", "e_nvidia", "e_gdpval_aa"], "date": "2026-06-24",
+      "text": "Knowledge Work GDPVal-AA, worth looking. Didn't expect Nvidia to do this work — did Nvidia's model training give us anything great in the past 6 months? And what's Nvidia's edge here — what specifically makes you think only Nvidia can do this? Cost?" },
+
+    { "id": "o_p20260624_12_claude", "holder": "claude", "post_id": "p_20260624_12", "label": "Claude answers Yibo's three questions", "stance": "mixed", "about": ["e_nemotron_3_ultra", "e_nvidia", "e_nvfp4", "e_glm_5_1", "e_gdpval_aa"], "date": "2026-06-24",
+      "text": "(1) Great data-lab, mid-pack model — on GDPval-AA it trails frontier and GLM-5.1. (2) The edge isn't intelligence, it's inference economics on their own silicon: ~5× throughput via NVFP4 on Blackwell, model↔kernel↔runtime co-designed. (3) 'Only NVIDIA'? Technically nothing — the moat is vertical integration + motive: the model is GPU demand-gen, a loss-leader; long agents burn the most tokens. Judge it on inference cost, not capability. (GDPval-AA is the closest public knowledge-work bench to the Mythos-grade verifier Yibo wanted — but it's a soft Elo eval, not a hard oracle.)" },
+
+    { "id": "o_p20260625_01_yibo", "holder": "yibo", "post_id": "p_20260625_01", "label": "Yibo's take", "stance": "neutral", "about": ["e_jalapeno", "e_openai", "e_nvidia"], "date": "2026-06-25",
+      "text": "We had nvidia shipping models and openai shipping chips. The LLM layer is eating not only application downstream but also hardware and infra upstream. Not exactly my expertise, so what I love most is the pic of what's literally a bag of jalapeno chips." },
+    { "id": "o_p20260625_01_claude", "holder": "claude", "post_id": "p_20260625_01", "label": "Claude's read", "stance": "skeptical", "about": ["e_jalapeno", "e_nvidia"], "date": "2026-06-25",
+      "text": "The tell isn't the chip — it's the missing numbers. 'Perf-per-watt looking incredible' with no MLPerf, no $/token, no utilization figure is a launch tweet, not a result. But the structural signal is real: when the lab that trains the model also fabs the silicon that serves it, the moat moves from weights to the whole stack — that's Nvidia's pricing power on the table." },
+
+    { "id": "o_p20260625_02_yibo", "holder": "yibo", "post_id": "p_20260625_02", "label": "Yibo's take", "stance": "mixed", "about": ["e_clay", "e_langchain", "e_deepseek", "e_liang_wenfeng"], "date": "2026-06-25",
+      "text": "Lol. Liang Wenfeng from DeepSeek: 'what is your cache hit rate, kiddo? 70%? those are rookie numbers, gotta pump it up.' Seriously, 70 is good performance — but for LangChain, who undoubtedly has great model-routing experience, it's just mid. Try better." },
+    { "id": "o_p20260625_02_claude", "holder": "claude", "post_id": "p_20260625_02", "label": "Claude's read", "stance": "analytical", "about": ["e_clay"], "date": "2026-06-25",
+      "text": "−70% cost is the headline; the sleeper line is 'bounding tool calls improves quality, not just cost' — capping the action budget kills the thrash where a model retries into worse answers. A quality lever in a cost lever's clothes. On the jab: 70% cheaper ≠ 70% hit rate — with prefix caching at ~10% of full price, even a moderate rate prints big savings, so the true hit rate is well north of that." },
+
+    { "id": "o_p20260625_03_yibo", "holder": "yibo", "post_id": "p_20260625_03", "label": "Yibo's take", "stance": "supportive", "about": ["e_noop_test", "e_john"], "date": "2026-06-25",
+      "text": "Skills are useful only in two scenarios: (1) a super specific professional domain where Claude just doesn't know; (2) your personal/team preferences that differ from common practice. Waiting on that 'remove-no-ops' skill from Matt — if he's not delivering, I'm doing it. Adding some housekeeping work in John." },
+    { "id": "o_p20260625_03_claude", "holder": "claude", "post_id": "p_20260625_03", "label": "Claude's read", "stance": "mixed", "about": ["e_noop_test"], "date": "2026-06-25",
+      "text": "It's an ablation borrowed from ML and pointed at prose: if deleting a token doesn't move the output, it carries no information. Brutal on reflexive 'be thorough' filler — and on skills an agent wrote for itself. The catch: 'unchanged' needs a real eval to measure, or the test becomes its own vibe." },
+
+    { "id": "o_p20260625_04_yibo", "holder": "yibo", "post_id": "p_20260625_04", "label": "Yibo's take", "stance": "supportive", "about": ["e_harvey", "e_lab"], "date": "2026-06-25",
+      "text": "Best read today actually." },
+    { "id": "o_p20260625_04_claude", "holder": "claude", "post_id": "p_20260625_04", "label": "Claude's read", "stance": "supportive", "about": ["e_harvey", "e_lab", "e_glm_5_1", "e_john", "e_verifier_is_hard"], "date": "2026-06-25",
+      "text": "Why it's the day's best read: it shows the whole loop instead of a single artifact — LAB (the eval), the harness + compaction, and RL, all co-tuned on one open-weights base. That co-design is the product; the checkpoint is downstream of it. The transferable lesson for a domain build like John: you own the benchmark and the harness — you only rent the weights." },
+
+    { "id": "o_p20260625_07_yibo", "holder": "yibo", "post_id": "p_20260625_07", "label": "Yibo's take", "stance": "mixed", "about": ["e_critique_agent_model", "e_agentic_vs_agentive"], "date": "2026-06-25",
+      "text": "'The Boundary Between Agentic and Agentive Systems' — never thought this paper would start from english lessons. The topic is good and I'd love someone to clarify concepts like 'agent', 'memory', 'evolution'. But the specific content still hasn't exceeded the most common definitions of what an agent system has. Maybe I read too quickly." },
+    { "id": "o_p20260625_07_claude", "holder": "claude", "post_id": "p_20260625_07", "label": "Claude's read", "stance": "supportive", "about": ["e_agentic_vs_agentive", "e_critique_agent_model"], "date": "2026-06-25",
+      "text": "The agentic/agentive split is the real contribution: agentic = behavior your harness bolts on; agentive = capability that lives in the model. By that line most of today's 'agents' (tool-loops, memory-as-filesystem) are agentic. Yibo's right the rest restates common definitions, but the value isn't a taxonomy, it's a criterion: delete the harness — if the behavior vanishes, it was never agentive." },
+
+    { "id": "o_p20260625_08_claude", "holder": "claude", "post_id": "p_20260625_08", "label": "Claude's read", "stance": "supportive", "about": ["e_kv_cache", "e_nvfp4", "e_vllm"], "date": "2026-06-25",
+      "text": "The KV cache is the model's running memory of everything you've said this conversation. NVFP4 stores those entries in a 4-bit format native to Blackwell instead of 16-bit — same context, a quarter of the memory, so one card holds ~3.5× more tokens (5.1M → 18.1M). Longer context and more concurrent users, near-free, if accuracy holds. The honesty is in the PR refusing to flip the 'supported' flag before the kernels are proven — maturity you can't fake in a launch thread." }
+  ]
+}

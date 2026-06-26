@@ -6,6 +6,7 @@ const cron = require('node-cron');
 const { execFile } = require('child_process');
 const multer = require('multer');
 const AdmZip = require('adm-zip');
+const { mountReader } = require('./reader/routes');
 
 const app = express();
 const PORT = process.env.PORT || 3013;
@@ -997,6 +998,14 @@ function scheduleReminders() {
   }, 15000); // check every 15 seconds
   console.log(`[Reminder] Interval checker started`);
 }
+
+// --- 小钻风 reader feature (shares this server + the global CC lock) ---
+mountReader(app, {
+  callClaude,
+  dataDir: DATA_DIR,
+  seedDir: path.join(__dirname, 'reader', 'seed'),
+  publicDir: STATIC_DIR,
+});
 
 // --- Start ---
 app.listen(PORT, () => {

@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "posts": [
+    {
+      "id": "p_20260624_02", "date": "2026-06-24", "slide_index": 1, "index_label": "02 / 13",
+      "rank_label": "Top post 01", "is_long_read": false, "category": "Launch",
+      "headline": "Claude Tag — Claude becomes a persistent, async Slack teammate",
+      "source": { "handle": "@claudeai", "domain": "anthropic.com", "grounding": "grounded via VentureBeat & SiliconANGLE" },
+      "url": "https://x.com/claudeai/status/2069468693017268244",
+      "body_summary": "Replaces the old 'Claude in Slack' app with an always-on agent that lives in channels as a shared team member with its own service account; admins scope separate Claude identities, memory accumulates per channel. Ambient mode monitors channels and acts unprompted, async over hours/days. Beta for Enterprise & Team. Anthropic says its Claude Code team now writes ~65% of product code with Claude.",
+      "mentions": ["e_claude_tag", "e_anthropic", "e_claude_code", "e_claude_in_slack", "e_ambient_mode"]
+    },
+    {
+      "id": "p_20260624_03", "date": "2026-06-24", "slide_index": 2, "index_label": "03 / 13",
+      "rank_label": "Top post 02", "is_long_read": false, "category": "Framing",
+      "headline": "\"The third LLM UI/UX paradigm\"",
+      "source": { "handle": "@karpathy", "domain": "x.com", "grounding": "his framing (post gated; quoted from the brief)" },
+      "url": "https://x.com/karpathy/status/2069547676849557725",
+      "body_summary": "A mental model for where agent surfaces are heading: website → local app → a self-contained, persistent, asynchronous entity with org-wide tools & memory, working alongside teams. Framed as the substantive lens behind the Claude Tag shift.",
+      "mentions": ["e_karpathy", "e_third_paradigm", "e_claude_tag"]
+    },
+    {
+      "id": "p_20260624_04", "date": "2026-06-24", "slide_index": 3, "index_label": "04 / 13",
+      "rank_label": "Top post 03", "is_long_read": false, "category": "Paper",
+      "headline": "Self-Harness: agents that rewrite their own harness",
+      "source": { "handle": "@hwchase17", "domain": "arXiv 2606.09498", "grounding": "Zhang et al. (read from source)" },
+      "url": "https://x.com/hwchase17/status/2069443268593537470",
+      "body_summary": "Three-stage loop — Weakness Mining → Harness Proposal → Proposal Validation (accept only after regression testing). Tested on Terminal-Bench-2.0 across MiniMax M2.5, Qwen3.5-35B-A3B, GLM-5; held-out pass rates rise 40.5→61.9%, 23.8→38.1%, 42.9→57.1%. Weights frozen; only prompts/tools/policies change.",
+      "mentions": ["e_self_harness", "e_harrison_chase", "e_terminal_bench", "e_glm_5", "e_meta_vs_self_harness"]
+    },
+    {
+      "id": "p_20260624_05", "date": "2026-06-24", "slide_index": 4, "index_label": "05 / 13",
+      "rank_label": "Long read", "is_long_read": true, "category": "Deep dive",
+      "headline": "Does it actually generalize? Reading the fine print",
+      "source": { "handle": "", "domain": "arXiv 2606.09498", "grounding": "Zhang et al." },
+      "url": "",
+      "body_summary": "Companion deep-dive to the Self-Harness paper: Terminal-Bench ships deterministic verifiers (not LLM-judged), so the real question is overfitting. The held-out gate is only 21 tasks reused across rounds → selection-overfitting; both splits come from the same benchmark, so nothing proves off-Terminal-Bench generalization. Net: it works because the domain ships a hard verifier — build the oracle, not the loop.",
+      "mentions": ["e_self_harness", "e_terminal_bench", "e_verifier_is_hard"]
+    },
+    {
+      "id": "p_20260624_06", "date": "2026-06-24", "slide_index": 5, "index_label": "06 / 13",
+      "rank_label": "Top post 04", "is_long_read": false, "category": "Open weights",
+      "headline": "GLM-5.2 tops open coding leaderboards — at ~1/6 the cost",
+      "source": { "handle": "Z.ai (Zhipu)", "domain": "MIT weights on Hugging Face", "grounding": "grounded via VentureBeat" },
+      "url": "https://huggingface.co/zai-org/GLM-5.2",
+      "body_summary": "SWE-bench Pro 62.1 (vs GPT-5.5 58.6); FrontierSWE 74.4% (GPT-5.5 72.6, Opus 4.8 75.1); Terminal-Bench 2.1 81.0 (first open weights >80); ~1/6 the cost ($5.80 vs ~$35 / 1M tok). 753B MoE, ~40B active, 1M context, MIT license.",
+      "mentions": ["e_glm_5_2", "e_zai", "e_swe_bench_pro", "e_frontier_swe", "e_terminal_bench", "e_gpt_5_5", "e_opus_4_8", "e_huggingface"]
+    },
+    {
+      "id": "p_20260624_07", "date": "2026-06-24", "slide_index": 6, "index_label": "07 / 13",
+      "rank_label": "Top post 05", "is_long_read": false, "category": "Security",
+      "headline": "Small open model + structured search holds its own at vuln-finding",
+      "source": { "handle": "@goodfellow_ian", "domain": "on AISLE · github.com/weareaisle/nano-analyzer", "grounding": "grounded via friendli.ai" },
+      "url": "https://x.com/goodfellow_ian/status/2069524601852612708",
+      "body_summary": "AISLE's nano-analyzer hunts zero-days function-by-function via a three-stage LLM pipeline (context gen → vuln scan → skeptical triage), outputting structured Markdown/JSON. Tuned for C/C++ memory safety. Claim: matched Mythos on public zero-day CVEs using open models, air-gappable. A cost result, not a superlative.",
+      "mentions": ["e_nano_analyzer", "e_aisle", "e_ian_goodfellow", "e_mythos"]
+    },
+    {
+      "id": "p_20260624_08", "date": "2026-06-24", "slide_index": 7, "index_label": "08 / 13",
+      "rank_label": "Top post 06", "is_long_read": false, "category": "Voice",
+      "headline": "ASR that's conditioned on the dialogue turn",
+      "source": { "handle": "@AssemblyAI", "domain": "Universal-3 Pro Streaming", "grounding": "grounded via AssemblyAI docs/blog" },
+      "url": "https://x.com/AssemblyAI/status/2069485982483919347",
+      "body_summary": "Built on Turn objects + immutable transcripts; each Turn maps to a speaking turn with intelligent endpointing and audio-cue turn detection. Keyterms prompting feeds a live list of up to ~100 domain terms over the socket. ~8.1% WER — lowest among streaming providers.",
+      "mentions": ["e_universal_3_pro", "e_assemblyai", "e_keyterms_prompting"]
+    },
+    {
+      "id": "p_20260624_09", "date": "2026-06-24", "slide_index": 8, "index_label": "09 / 13",
+      "rank_label": "Top post 07", "is_long_read": false, "category": "Framework",
+      "headline": "eve: Vercel's filesystem-first agent framework",
+      "source": { "handle": "@omarsar0", "domain": "vercel.com/blog/introducing-eve", "grounding": "read from source" },
+      "url": "https://x.com/omarsar0/status/2069455656214532137",
+      "body_summary": "An agent is a directory: instructions + skills as markdown, tools as TypeScript (defineTool + Zod), evals as scored CI suites. eve picks up tools/skills at build time, like Next.js file routing. Core premise: 'agents have a shape' — a recurring structure formalized so teams stop rebuilding plumbing.",
+      "mentions": ["e_eve", "e_vercel", "e_elvis", "e_agent_has_shape"]
+    },
+    {
+      "id": "p_20260624_10", "date": "2026-06-24", "slide_index": 9, "index_label": "10 / 13",
+      "rank_label": "Long read", "is_long_read": true, "category": "Deep dive",
+      "headline": "Batteries included — the skeleton every agent ships with",
+      "source": { "handle": "Vercel", "domain": "\"Introducing eve\"", "grounding": "production capabilities, read from source" },
+      "url": "https://vercel.com/blog/introducing-eve",
+      "body_summary": "eve's production capabilities: durable execution (sessions checkpoint each step, resume across crashes), sandboxed compute, subagents (scoped tools + clean contexts), and OpenTelemetry-compatible tracing on every run.",
+      "mentions": ["e_eve", "e_vercel", "e_durable_execution", "e_agent_has_shape"]
+    },
+    {
+      "id": "p_20260624_11", "date": "2026-06-24", "slide_index": 10, "index_label": "11 / 13",
+      "rank_label": "Long read", "is_long_read": true, "category": "Infra",
+      "headline": "Nemotron 3 Ultra — efficient reasoning for long-running agents",
+      "source": { "handle": "NVIDIA Technical Blog", "domain": "developer.nvidia.com", "grounding": "read from source" },
+      "url": "",
+      "body_summary": "550B params (55B active) hybrid Mamba-2 + Transformer MoE; 1M context, 95% on Ruler@1M; ~5× throughput vs open peers; GDPval-AA 'knowledge work' score 1,448. Trained on 10T tokens. Demo: autonomous assistant with Hermes Agent (plan → call tools → delegate → validate → recover).",
+      "mentions": ["e_nemotron_3_ultra", "e_nvidia", "e_ruler", "e_gdpval_aa", "e_hermes_agent"]
+    },
+    {
+      "id": "p_20260624_12", "date": "2026-06-24", "slide_index": 11, "index_label": "12 / 13",
+      "rank_label": "Long read", "is_long_read": true, "category": "Claude's read",
+      "headline": "Read it as an ad for GPUs that happens to be a decent model",
+      "source": { "handle": "", "domain": "", "grounding": "Claude answers Yibo's three questions" },
+      "url": "",
+      "body_summary": "Claude's verdict on Nemotron: great data-lab, mid-pack model (trails frontier and GLM-5.1 on GDPval-AA). The edge is inference economics on NVIDIA's own silicon (~5× throughput via NVFP4 on Blackwell), not intelligence. The moat is vertical integration + motive — the model is GPU demand-gen. Judge it on inference cost, not capability.",
+      "mentions": ["e_nemotron_3_ultra", "e_nvidia", "e_gdpval_aa", "e_glm_5_1", "e_nvfp4", "e_mythos"]
+    },
+
+    {
+      "id": "p_20260625_01", "date": "2026-06-25", "slide_index": 1, "index_label": "01 / 08",
+      "rank_label": "Top post 1", "is_long_read": false, "category": "Hardware",
+      "headline": "OpenAI ships \"Jalapeño,\" its first in-house inference chip",
+      "source": { "handle": "@OpenAI", "domain": "x.com/OpenAI", "grounding": "custom silicon, co-built with Broadcom, for LLM serving" },
+      "url": "https://x.com/OpenAI",
+      "body_summary": "First custom silicon, co-developed with Broadcom, purpose-built to serve LLMs (ChatGPT, Codex, the API). @gdb's 'perf-per-watt looking incredible' is a vendor claim — no independent numbers yet; watch for third-party MLPerf.",
+      "mentions": ["e_jalapeno", "e_openai", "e_broadcom", "e_greg_brockman"]
+    },
+    {
+      "id": "p_20260625_02", "date": "2026-06-25", "slide_index": 2, "index_label": "02 / 08",
+      "rank_label": "Top post 2", "is_long_read": false, "category": "Infra · GTM",
+      "headline": "Clay's production lessons from 350M GTM agents a month",
+      "source": { "handle": "@LangChain", "domain": "x.com/LangChain", "grounding": "Jeff Barg, on real multi-tenant load" },
+      "url": "https://x.com/LangChain",
+      "body_summary": "350M GTM agents run per month. −70% LLM cost from caching alone; tool-call caps improve quality (not just cost) by bounding thrash; fairness queues become mandatory once tenants compete for capacity.",
+      "mentions": ["e_clay", "e_langchain", "e_jeff_barg"]
+    },
+    {
+      "id": "p_20260625_03", "date": "2026-06-25", "slide_index": 3, "index_label": "03 / 08",
+      "rank_label": "Top post 3", "is_long_read": false, "category": "Craft",
+      "headline": "The \"no-op\" test: delete the line — did anything change?",
+      "source": { "handle": "@mattpocockuk", "domain": "x.com/mattpocockuk", "grounding": "a falsifiable test for skills & prompts" },
+      "url": "https://x.com/mattpocockuk",
+      "body_summary": "Falsifiable craft: remove a line ('be thorough', 'write a detailed commit message'). If output is unchanged, it was a no-op — burning tokens and hurting evaluability. Agent-authored skills are full of them. A test, not a thesis.",
+      "mentions": ["e_noop_test", "e_matt_pocock"]
+    },
+    {
+      "id": "p_20260625_04", "date": "2026-06-25", "slide_index": 4, "index_label": "04 / 08",
+      "rank_label": "Long read", "is_long_read": true, "category": "Architecture + Eval",
+      "headline": "Training a legal agent on GLM — the full stack",
+      "source": { "handle": "", "domain": "Applied Compute × Harvey", "grounding": "production post-training case study" },
+      "url": "",
+      "body_summary": "A production post-training case study (not a model release). Three things co-tuned: the eval loop, the agent harness + compaction, and RL post-training of GLM-5.1. Graded on Harvey's Legal Agent Benchmark (LAB). Squarely a domain-build GTM lens.",
+      "mentions": ["e_applied_compute", "e_harvey", "e_glm_5_1", "e_lab", "e_verifier_is_hard"]
+    },
+    {
+      "id": "p_20260625_05", "date": "2026-06-25", "slide_index": 5, "index_label": "05 / 08",
+      "rank_label": "Long read", "is_long_read": true, "category": "Legal evals",
+      "headline": "Inside LAB — what Harvey actually grades",
+      "source": { "handle": "", "domain": "Harvey · Legal Agent Benchmark", "grounding": "harvey.ai/blog" },
+      "url": "https://harvey.ai/blog",
+      "body_summary": "1,250 tasks mirroring real law-firm workflows; 75,000+ expert rubric criteria (atomic, binary); 24 practice areas. All-pass LLM-judged grading — every criterion must pass ('eight of ten risks is materially incomplete'). Sample: review a $458M acquisition data room, 57 criteria across 9 issues. The rubric is the product spec.",
+      "mentions": ["e_lab", "e_harvey", "e_verifier_is_hard"]
+    },
+    {
+      "id": "p_20260625_06", "date": "2026-06-25", "slide_index": 6, "index_label": "06 / 08",
+      "rank_label": "Long read", "is_long_read": true, "category": "RL",
+      "headline": "How the win was won: a cheap-but-trusted judge, then RL",
+      "source": { "handle": "", "domain": "Applied Compute × Harvey", "grounding": "grader analysis · harness · full-parameter RL" },
+      "url": "https://harvey.ai/blog",
+      "body_summary": "Trusted small-model judge: GPT-5 Mini held >97% alignment to a frontier consensus (GPT-5.5 xhigh + Opus 4.8 Max), and Mini + batched criteria is 40–100× cheaper — what makes high-compute RL affordable. Harness = read+grep over a sandboxed file set, hardened + compaction. Full-parameter RL on GLM-5.1 lifts rubric pass 0.853→0.913 (beats Opus 4.8 Max & GPT-5.5 xhigh); tool calls 16→2. 'The harness made better strategies available; RL taught the model to execute them.'",
+      "mentions": ["e_applied_compute", "e_harvey", "e_glm_5_1", "e_lab", "e_gpt_5_5", "e_opus_4_8"]
+    },
+    {
+      "id": "p_20260625_07", "date": "2026-06-25", "slide_index": 7, "index_label": "07 / 08",
+      "rank_label": "Long read", "is_long_read": true, "category": "Theory",
+      "headline": "\"Critique of the Agent Model\" — where agency actually begins",
+      "source": { "handle": "", "domain": "arxiv.org/pdf/2606.23991", "grounding": "Eric Xing et al · via @omarsar0" },
+      "url": "https://arxiv.org/pdf/2606.23991",
+      "body_summary": "A primary paper giving vocabulary across five axes (goal, identity, decision-making, self-regulation, learning). Its sharp edge: agentic (behavior bolted on by an external harness) vs agentive (capability that lives inside the model itself).",
+      "mentions": ["e_critique_agent_model", "e_eric_xing", "e_elvis", "e_agentic_vs_agentive"]
+    },
+    {
+      "id": "p_20260625_08", "date": "2026-06-25", "slide_index": 8, "index_label": "08 / 08",
+      "rank_label": "Long read", "is_long_read": true, "category": "Inference",
+      "headline": "NVFP4 KV cache lands for Blackwell — read the PRs, not the hype",
+      "source": { "handle": "", "domain": "vLLM / FlashInfer watch", "grounding": "from-source inference engineering" },
+      "url": "",
+      "body_summary": "vLLM PR #46329 opens native NVFP4 KV cache on SM120/121 via FlashInfer, flag deliberately off until kernels are proven. 3.52× more KV-cache capacity on Gemma-4-E2B (5.1M → 18.1M tokens on one card): same context at a quarter of the memory — longer context and more concurrent users, near-free if accuracy holds.",
+      "mentions": ["e_nvfp4", "e_vllm", "e_flashinfer", "e_kv_cache", "e_gemma_4"]
+    }
+  ]
+}

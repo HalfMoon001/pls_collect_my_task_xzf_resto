@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>小钻风 · 学习</title>
+<style>
+:root{--navy:#0F2147;--denim:#80B3D2;--wool:#F5F2ED;--vermilion:#B5252B;--ink:#1a1a1a;--mute:#6E6E6E;--line:#e2ddd4;--green:#5FA463;}
+*{box-sizing:border-box;}
+html,body{margin:0;min-height:100%;font-family:"Hanken Grotesk","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);background:#ece8e0;}
+header{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--navy);color:#fff;position:sticky;top:0;z-index:10;flex-wrap:wrap;}
+header .brand{font-weight:700;font-family:"IBM Plex Mono",monospace;}
+header a{color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.3);padding:5px 10px;border-radius:7px;}
+.tabbtn{border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;font:inherit;padding:5px 13px;border-radius:7px;cursor:pointer;}
+.tabbtn.active{background:#fff;color:var(--navy);font-weight:700;}
+header input[type=search]{font:inherit;padding:5px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;}
+header input::placeholder{color:rgba(255,255,255,.6);}
+header label{font-size:12px;display:flex;gap:4px;align-items:center;cursor:pointer;}
+header .right{margin-left:auto;display:flex;gap:10px;align-items:center;}
+main{max-width:900px;margin:0 auto;padding:22px 18px 60px;}
+.view{display:none;} .view.active{display:block;}
+.empty{color:var(--mute);background:#fff;border:1px dashed var(--line);border-radius:12px;padding:20px;line-height:1.8;}
+
+/* glossary */
+.term{background:#fff;border:1px solid var(--line);border-left:4px solid var(--denim);border-radius:11px;padding:13px 16px;margin-bottom:12px;}
+.term h3{margin:0;color:var(--navy);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.term .type{font-size:11px;font-family:"IBM Plex Mono",monospace;color:var(--mute);text-transform:uppercase;}
+.term .alias{font-size:12px;color:var(--mute);font-weight:400;}
+.term .def{margin:7px 0 0;line-height:1.65;}
+.term .meta{margin-top:8px;font-size:12px;color:var(--mute);}
+.term .meta a{color:var(--denim);text-decoration:none;}
+.count{font-size:13px;color:var(--mute);margin-bottom:14px;}
+
+/* quiz */
+#quiz-start{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px;}
+#quiz-start button{font:inherit;padding:10px 20px;border:0;background:var(--navy);color:#fff;border-radius:10px;cursor:pointer;font-weight:700;}
+#quiz-start button:disabled{opacity:.5;cursor:not-allowed;}
+#quiz-start select{font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;}
+.qcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;}
+.qcard .qn{font-size:11px;font-family:"IBM Plex Mono",monospace;color:var(--vermilion);}
+.qcard .q{font-weight:700;color:var(--navy);margin:5px 0 10px;font-size:16px;line-height:1.5;}
+.qcard textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px;font:inherit;font-size:14px;resize:vertical;min-height:64px;}
+.qcard .grade{margin-top:11px;border-top:1px dashed var(--line);padding-top:11px;display:none;}
+.qcard .grade.show{display:block;}
+.qcard .verdict{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:6px;color:#fff;}
+.v-对{background:var(--green);} .v-部分对{background:#E0B73A;} .v-不对{background:var(--vermilion);}
+.qcard .comment{margin:8px 0 0;line-height:1.6;}
+.qcard .correct{margin:6px 0 0;font-size:13px;color:#444;background:var(--wool);border-radius:7px;padding:7px 10px;}
+#quiz-actions{display:flex;gap:12px;align-items:center;margin-top:8px;}
+#quiz-actions button{font:inherit;padding:10px 20px;border:0;background:var(--vermilion);color:#fff;border-radius:10px;cursor:pointer;font-weight:700;}
+#score{font-weight:700;color:var(--navy);}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">学习</span>
+  <button class="tabbtn active" data-view="glossary-view">术语表</button>
+  <button class="tabbtn" data-view="quiz-view">CC 小测</button>
+  <div class="right">
+    <input type="search" id="search" placeholder="搜索术语…">
+    <label><input type="checkbox" id="show-concepts"> 也显示图谱概念</label>
+    <a href="/" title="返回记忆手帐">← 手帐</a><a href="/reader/">阅读器</a><a href="/reader/graph">知识图谱</a>
+  </div>
+</header>
+<main>
+  <div id="glossary-view" class="view active">
+    <div class="count" id="gloss-count"></div>
+    <div id="gloss-list"></div>
+  </div>
+  <div id="quiz-view" class="view">
+    <div id="quiz-start">
+      <button id="quiz-go">开始小测</button>
+      <label>题数 <select id="quiz-n"><option>3</option><option selected>5</option><option>8</option></select></label>
+      <span id="quiz-hint" class="count"></span>
+    </div>
+    <div id="quiz-body"></div>
+  </div>
+</main>
+<script src="/reader/learn.js"></script>
+</body>
+</html>

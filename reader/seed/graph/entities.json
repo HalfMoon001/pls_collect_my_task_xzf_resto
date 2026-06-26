@@ -1,0 +1,783 @@
+{
+  "schema_version": 1,
+  "entities": [
+    {
+      "id": "e_anthropic",
+      "type": "company",
+      "canonical_name": "Anthropic",
+      "aliases": [
+        "@claudeai"
+      ],
+      "description": "AI lab behind Claude; ships Claude Tag and Claude Code.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_02"
+      ]
+    },
+    {
+      "id": "e_claude_tag",
+      "type": "product",
+      "canonical_name": "Claude Tag",
+      "aliases": [],
+      "description": "Always-on async Claude agent that lives in Slack channels as a shared team member; replaces 'Claude in Slack'.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_02",
+        "p_20260624_03"
+      ]
+    },
+    {
+      "id": "e_claude_code",
+      "type": "product",
+      "canonical_name": "Claude Code",
+      "aliases": [
+        "CC"
+      ],
+      "description": "Anthropic's agentic coding tool; Anthropic says its Claude Code team writes ~65% of product code with Claude.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_02"
+      ]
+    },
+    {
+      "id": "e_claude_in_slack",
+      "type": "product",
+      "canonical_name": "Claude in Slack",
+      "aliases": [],
+      "description": "Older Slack app, replaced by Claude Tag.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_02"
+      ]
+    },
+    {
+      "id": "e_ambient_mode",
+      "type": "concept",
+      "canonical_name": "Ambient mode",
+      "aliases": [],
+      "description": "Agent monitors assigned channels and acts unprompted, working async over hours/days.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_02"
+      ]
+    },
+    {
+      "id": "e_karpathy",
+      "type": "person",
+      "canonical_name": "Andrej Karpathy",
+      "aliases": [
+        "@karpathy"
+      ],
+      "description": "AI researcher; framed the 'third LLM UI/UX paradigm'.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_03"
+      ]
+    },
+    {
+      "id": "e_third_paradigm",
+      "type": "concept",
+      "canonical_name": "The third LLM UI/UX paradigm",
+      "aliases": [],
+      "description": "website → local app → self-contained, persistent, asynchronous entity with org-wide tools & memory.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_03"
+      ]
+    },
+    {
+      "id": "e_self_harness",
+      "type": "paper",
+      "canonical_name": "Self-Harness (arXiv 2606.09498)",
+      "aliases": [
+        "Self-Harness"
+      ],
+      "description": "Zhang et al.: agents rewrite their own harness via Weakness Mining → Harness Proposal → Proposal Validation; weights frozen.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_04",
+        "p_20260624_05"
+      ]
+    },
+    {
+      "id": "e_harrison_chase",
+      "type": "person",
+      "canonical_name": "Harrison Chase",
+      "aliases": [
+        "@hwchase17"
+      ],
+      "description": "LangChain founder; surfaced the Self-Harness paper.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_04"
+      ]
+    },
+    {
+      "id": "e_terminal_bench",
+      "type": "benchmark",
+      "canonical_name": "Terminal-Bench",
+      "aliases": [
+        "Terminal-Bench-2.0",
+        "Terminal-Bench 2.1"
+      ],
+      "description": "Coding/agent benchmark with deterministic verifiers; used by Self-Harness and GLM-5.2.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_04",
+        "p_20260624_05",
+        "p_20260624_06"
+      ]
+    },
+    {
+      "id": "e_glm_5",
+      "type": "product",
+      "canonical_name": "GLM-5",
+      "aliases": [],
+      "description": "Z.ai open model family member tested in Self-Harness.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_04"
+      ]
+    },
+    {
+      "id": "e_meta_vs_self_harness",
+      "type": "concept",
+      "canonical_name": "Meta-harness vs self-harness",
+      "aliases": [],
+      "description": "Yibo's distinction: he buys the meta-harness story (built into KC) but distrusts a model correcting/evolving itself.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_04"
+      ]
+    },
+    {
+      "id": "e_verifier_is_hard",
+      "type": "concept",
+      "canonical_name": "The verifier is the hard part",
+      "aliases": [
+        "build the oracle not the loop"
+      ],
+      "description": "Recurring thread: for long-running/domain work the bench/verifier is the hard 80%; the self-vs-meta loop is the easy part.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_05",
+        "p_20260625_04",
+        "p_20260625_05"
+      ]
+    },
+    {
+      "id": "e_glm_5_2",
+      "type": "product",
+      "canonical_name": "GLM-5.2",
+      "aliases": [
+        "zai-org/GLM-5.2"
+      ],
+      "description": "Z.ai open-weights (MIT) coding model; 753B MoE (~40B active), 1M context; tops open coding leaderboards at ~1/6 the cost.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_06"
+      ]
+    },
+    {
+      "id": "e_zai",
+      "type": "company",
+      "canonical_name": "Z.ai (Zhipu)",
+      "aliases": [
+        "Zhipu",
+        "zai-org"
+      ],
+      "description": "Chinese lab shipping the open-weights GLM model family.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_06"
+      ]
+    },
+    {
+      "id": "e_swe_bench_pro",
+      "type": "benchmark",
+      "canonical_name": "SWE-bench Pro",
+      "aliases": [],
+      "description": "Software-engineering benchmark.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_06"
+      ]
+    },
+    {
+      "id": "e_frontier_swe",
+      "type": "benchmark",
+      "canonical_name": "FrontierSWE",
+      "aliases": [],
+      "description": "Frontier software-engineering benchmark.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_06"
+      ]
+    },
+    {
+      "id": "e_gpt_5_5",
+      "type": "product",
+      "canonical_name": "GPT-5.5",
+      "aliases": [
+        "GPT-5.5 xhigh"
+      ],
+      "description": "OpenAI frontier model used as a benchmark baseline and grader-consensus member.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_06",
+        "p_20260625_06"
+      ]
+    },
+    {
+      "id": "e_opus_4_8",
+      "type": "product",
+      "canonical_name": "Claude Opus 4.8",
+      "aliases": [
+        "Opus 4.8",
+        "Opus 4.8 Max"
+      ],
+      "description": "Anthropic frontier model used as a benchmark baseline and grader-consensus member.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_06",
+        "p_20260625_06"
+      ]
+    },
+    {
+      "id": "e_huggingface",
+      "type": "source",
+      "canonical_name": "Hugging Face",
+      "aliases": [],
+      "description": "Model/weights hosting platform.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_06"
+      ]
+    },
+    {
+      "id": "e_nano_analyzer",
+      "type": "tool",
+      "canonical_name": "nano-analyzer",
+      "aliases": [
+        "weareaisle/nano-analyzer"
+      ],
+      "description": "AISLE's function-by-function zero-day hunter; three-stage LLM pipeline, air-gappable, C/C++ memory-safety focus.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_07"
+      ]
+    },
+    {
+      "id": "e_aisle",
+      "type": "company",
+      "canonical_name": "AISLE",
+      "aliases": [],
+      "description": "Security AI shop behind nano-analyzer.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_07"
+      ]
+    },
+    {
+      "id": "e_ian_goodfellow",
+      "type": "person",
+      "canonical_name": "Ian Goodfellow",
+      "aliases": [
+        "@goodfellow_ian"
+      ],
+      "description": "Surfaced AISLE's nano-analyzer vuln-finding result.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_07"
+      ]
+    },
+    {
+      "id": "e_mythos",
+      "type": "product",
+      "canonical_name": "Mythos",
+      "aliases": [],
+      "description": "Reference-grade vuln-finding system; nano-analyzer claims to match it on public zero-day CVEs. Yibo wants a 'Mythos-grade verifier' for knowledge engineering.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_07",
+        "p_20260624_12"
+      ]
+    },
+    {
+      "id": "e_universal_3_pro",
+      "type": "product",
+      "canonical_name": "Universal-3 Pro Streaming",
+      "aliases": [],
+      "description": "AssemblyAI ASR conditioned on dialogue turns; Turn objects + immutable transcripts; ~8.1% WER.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_08"
+      ]
+    },
+    {
+      "id": "e_assemblyai",
+      "type": "company",
+      "canonical_name": "AssemblyAI",
+      "aliases": [
+        "@AssemblyAI"
+      ],
+      "description": "Speech-to-text provider.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_08"
+      ]
+    },
+    {
+      "id": "e_keyterms_prompting",
+      "type": "concept",
+      "canonical_name": "Keyterms prompting",
+      "aliases": [],
+      "description": "Feeding a live list of up to ~100 domain terms over the socket, updated turn-by-turn, to lock in words that matter.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_08"
+      ]
+    },
+    {
+      "id": "e_eve",
+      "type": "framework",
+      "canonical_name": "eve",
+      "aliases": [],
+      "description": "Vercel's filesystem-first agent framework: an agent is a directory (markdown skills, TS tools, scored evals); picks up tools at build time.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_09",
+        "p_20260624_10"
+      ]
+    },
+    {
+      "id": "e_vercel",
+      "type": "company",
+      "canonical_name": "Vercel",
+      "aliases": [],
+      "description": "Company behind eve and Next.js.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_09",
+        "p_20260624_10"
+      ]
+    },
+    {
+      "id": "e_elvis",
+      "type": "person",
+      "canonical_name": "Elvis Saravia",
+      "aliases": [
+        "@omarsar0"
+      ],
+      "description": "Surfaced eve and the 'Critique of the Agent Model' paper.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_09",
+        "p_20260625_07"
+      ]
+    },
+    {
+      "id": "e_agent_has_shape",
+      "type": "concept",
+      "canonical_name": "Agents have a shape",
+      "aliases": [],
+      "description": "A recurring structure across agent implementations, formalized so teams stop rebuilding the same plumbing.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_09",
+        "p_20260624_10"
+      ]
+    },
+    {
+      "id": "e_durable_execution",
+      "type": "concept",
+      "canonical_name": "Durable execution",
+      "aliases": [],
+      "description": "Sessions checkpoint each step and resume 'exactly where it stopped' across crashes/deploys.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_10"
+      ]
+    },
+    {
+      "id": "e_nemotron_3_ultra",
+      "type": "product",
+      "canonical_name": "Nemotron 3 Ultra",
+      "aliases": [],
+      "description": "NVIDIA 550B (55B active) hybrid Mamba-2 + Transformer MoE; 1M context, GDPval-AA 1,448; positioned for long-running agents.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_11",
+        "p_20260624_12"
+      ]
+    },
+    {
+      "id": "e_nvidia",
+      "type": "company",
+      "canonical_name": "NVIDIA",
+      "aliases": [],
+      "description": "GPU maker; ships models (Nemotron) and the Blackwell silicon they run on.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_11",
+        "p_20260624_12"
+      ]
+    },
+    {
+      "id": "e_ruler",
+      "type": "benchmark",
+      "canonical_name": "Ruler",
+      "aliases": [
+        "Ruler@1M"
+      ],
+      "description": "Long-context benchmark; Nemotron 3 Ultra scores 95% at 1M.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_11"
+      ]
+    },
+    {
+      "id": "e_gdpval_aa",
+      "type": "benchmark",
+      "canonical_name": "GDPval-AA",
+      "aliases": [
+        "GDPVal-AA"
+      ],
+      "description": "'Knowledge work' benchmark; expert/Elo-judged soft eval, the closest public knowledge-work bench to the 'Mythos-grade verifier' Yibo wants.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_11",
+        "p_20260624_12"
+      ]
+    },
+    {
+      "id": "e_hermes_agent",
+      "type": "framework",
+      "canonical_name": "Hermes Agent",
+      "aliases": [],
+      "description": "NVIDIA's demo agent loop: plan → call tools → delegate → validate → recover.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_11"
+      ]
+    },
+    {
+      "id": "e_glm_5_1",
+      "type": "product",
+      "canonical_name": "GLM-5.1",
+      "aliases": [],
+      "description": "Z.ai open-weights base; the base Applied Compute × Harvey post-trained for the legal agent.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_12",
+        "p_20260625_04",
+        "p_20260625_06"
+      ]
+    },
+    {
+      "id": "e_nvfp4",
+      "type": "concept",
+      "canonical_name": "NVFP4",
+      "aliases": [],
+      "description": "4-bit numeric format native to NVIDIA Blackwell; powers ~5× inference throughput and a 4-bit KV cache.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_12",
+        "p_20260625_08"
+      ]
+    },
+    {
+      "id": "e_jalapeno",
+      "type": "product",
+      "canonical_name": "Jalapeño",
+      "aliases": [],
+      "description": "OpenAI's first in-house inference chip, co-built with Broadcom to serve LLMs (ChatGPT, Codex, API).",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_01"
+      ]
+    },
+    {
+      "id": "e_openai",
+      "type": "company",
+      "canonical_name": "OpenAI",
+      "aliases": [
+        "@OpenAI"
+      ],
+      "description": "Lab shipping ChatGPT/Codex/GPT models; now also custom silicon (Jalapeño).",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_01"
+      ]
+    },
+    {
+      "id": "e_broadcom",
+      "type": "company",
+      "canonical_name": "Broadcom",
+      "aliases": [],
+      "description": "Co-developer of OpenAI's Jalapeño chip.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_01"
+      ]
+    },
+    {
+      "id": "e_greg_brockman",
+      "type": "person",
+      "canonical_name": "Greg Brockman",
+      "aliases": [
+        "@gdb"
+      ],
+      "description": "OpenAI; 'perf-per-watt looking incredible' vendor claim on Jalapeño.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_01"
+      ]
+    },
+    {
+      "id": "e_clay",
+      "type": "company",
+      "canonical_name": "Clay",
+      "aliases": [],
+      "description": "GTM platform running 350M agents/month; source of the multi-tenant production lessons.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_02"
+      ]
+    },
+    {
+      "id": "e_langchain",
+      "type": "company",
+      "canonical_name": "LangChain",
+      "aliases": [
+        "@LangChain"
+      ],
+      "description": "Agent framework company; surfaced Clay's production lessons (Jeff Barg).",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_02"
+      ]
+    },
+    {
+      "id": "e_jeff_barg",
+      "type": "person",
+      "canonical_name": "Jeff Barg",
+      "aliases": [],
+      "description": "Presented Clay's real multi-tenant load lessons.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_02"
+      ]
+    },
+    {
+      "id": "e_noop_test",
+      "type": "concept",
+      "canonical_name": "The 'no-op' test",
+      "aliases": [],
+      "description": "Falsifiable ablation for prose/skills: delete a line; if output is unchanged it carried no information (a no-op).",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_03"
+      ]
+    },
+    {
+      "id": "e_matt_pocock",
+      "type": "person",
+      "canonical_name": "Matt Pocock",
+      "aliases": [
+        "@mattpocockuk"
+      ],
+      "description": "Proposed the no-op test for skills & prompts.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_03"
+      ]
+    },
+    {
+      "id": "e_applied_compute",
+      "type": "company",
+      "canonical_name": "Applied Compute",
+      "aliases": [],
+      "description": "Post-training shop; co-authored the Harvey legal-agent case study.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_04",
+        "p_20260625_06"
+      ]
+    },
+    {
+      "id": "e_harvey",
+      "type": "company",
+      "canonical_name": "Harvey",
+      "aliases": [
+        "harvey.ai"
+      ],
+      "description": "Legal AI company; owns the Legal Agent Benchmark (LAB) and the legal-agent post-training case study.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_04",
+        "p_20260625_05",
+        "p_20260625_06"
+      ]
+    },
+    {
+      "id": "e_lab",
+      "type": "benchmark",
+      "canonical_name": "Legal Agent Benchmark (LAB)",
+      "aliases": [
+        "LAB"
+      ],
+      "description": "Harvey's eval: 1,250 law-firm tasks, 75,000+ atomic binary rubric criteria, 24 practice areas, all-pass LLM-judged. 'The rubric is the product spec.'",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_04",
+        "p_20260625_05",
+        "p_20260625_06"
+      ]
+    },
+    {
+      "id": "e_critique_agent_model",
+      "type": "paper",
+      "canonical_name": "Critique of the Agent Model (arXiv 2606.23991)",
+      "aliases": [],
+      "description": "Eric Xing et al.: vocabulary for 'agent' across five axes; introduces the agentic-vs-agentive distinction.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_07"
+      ]
+    },
+    {
+      "id": "e_eric_xing",
+      "type": "person",
+      "canonical_name": "Eric Xing",
+      "aliases": [],
+      "description": "Lead author of 'Critique of the Agent Model'.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_07"
+      ]
+    },
+    {
+      "id": "e_agentic_vs_agentive",
+      "type": "concept",
+      "canonical_name": "Agentic vs agentive",
+      "aliases": [],
+      "description": "agentic = behavior bolted on by an external harness; agentive = capability living in the model. Criterion: delete the harness — if the behavior vanishes, it was never agentive.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_07"
+      ]
+    },
+    {
+      "id": "e_vllm",
+      "type": "tool",
+      "canonical_name": "vLLM",
+      "aliases": [],
+      "description": "Inference serving engine; PR #46329 opens native NVFP4 KV cache on Blackwell.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_08"
+      ]
+    },
+    {
+      "id": "e_flashinfer",
+      "type": "tool",
+      "canonical_name": "FlashInfer",
+      "aliases": [],
+      "description": "Kernel library enabling vLLM's NVFP4 KV cache on SM120/121.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_08"
+      ]
+    },
+    {
+      "id": "e_kv_cache",
+      "type": "concept",
+      "canonical_name": "KV cache",
+      "aliases": [],
+      "description": "The model's running memory of the conversation; storing it in 4-bit NVFP4 quarters the memory, ~3.5× more tokens per card.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_08"
+      ]
+    },
+    {
+      "id": "e_gemma_4",
+      "type": "product",
+      "canonical_name": "Gemma-4-E2B",
+      "aliases": [],
+      "description": "Model used to measure NVFP4 KV-cache capacity gain (5.1M → 18.1M tokens).",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_08"
+      ]
+    },
+    {
+      "id": "e_yibo",
+      "type": "person",
+      "canonical_name": "Yibo",
+      "aliases": [
+        "YB"
+      ],
+      "description": "The brief's editor; author of 'Yibo's take'. Builds the knowledge-engineering projects John and KC.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_02",
+        "p_20260624_03",
+        "p_20260624_04",
+        "p_20260625_03",
+        "p_20260625_04"
+      ]
+    },
+    {
+      "id": "e_john",
+      "type": "project",
+      "canonical_name": "John",
+      "aliases": [],
+      "description": "Yibo's general knowledge-engineering project (this workspace's framework); domain-build lens recurs in his takes.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_06",
+        "p_20260624_09",
+        "p_20260625_03",
+        "p_20260625_04"
+      ]
+    },
+    {
+      "id": "e_kc",
+      "type": "project",
+      "canonical_name": "KC / KC_CLI",
+      "aliases": [
+        "KC_CLI"
+      ],
+      "description": "Yibo's earlier knowledge-engineering harness; some modules built on the meta-harness idea.",
+      "first_seen": "2026-06-24",
+      "mentions": [
+        "p_20260624_04",
+        "p_20260624_09"
+      ]
+    },
+    {
+      "id": "e_deepseek",
+      "type": "company",
+      "canonical_name": "DeepSeek",
+      "aliases": [],
+      "description": "Chinese lab; invoked by Yibo (Liang Wenfeng) jokingly on cache hit rates.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_02"
+      ]
+    },
+    {
+      "id": "e_liang_wenfeng",
+      "type": "person",
+      "canonical_name": "Liang Wenfeng",
+      "aliases": [],
+      "description": "DeepSeek founder; Yibo channels him jabbing at 70% cache hit rate as 'rookie numbers'.",
+      "first_seen": "2026-06-25",
+      "mentions": [
+        "p_20260625_02"
+      ]
+    }
+  ]
+}

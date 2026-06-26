@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小钻风阅读器</title>
+<link rel="stylesheet" href="/reader/reader.css">
+</head>
+<body>
+<header id="topbar">
+  <a class="back-memo" href="/" title="返回记忆手帐">← 手帐</a>
+  <div class="brand">小钻风 · 阅读器</div>
+  <div id="datepicker">
+    <button id="dp-btn" title="选择日期">📅 选择日期</button>
+    <div id="dp-pop" hidden></div>
+  </div>
+  <button id="btn-extract" title="用 CC 抽取这篇导读到知识图谱">抽取入图谱</button>
+  <a id="btn-graph" href="/reader/graph">知识图谱</a>
+  <a id="btn-learn" href="/reader/learn">学习</a>
+  <label class="autotx" title="选中文字时自动翻译"><input type="checkbox" id="auto-tx"> 选中即译</label>
+  <span id="status"></span>
+</header>
+
+<main>
+  <section id="reading">
+    <iframe id="deck" title="导读"></iframe>
+  </section>
+
+  <div id="divider" title="拖动调整左右栏宽度"></div>
+
+  <aside id="side">
+    <div class="tabs">
+      <button class="tab active" data-tab="panel">副栏</button>
+      <button class="tab" data-tab="annos">标注 <span id="anno-count">0</span></button>
+    </div>
+
+    <div id="panel" class="tabpane active">
+      <div id="live-tx" hidden>
+        <div class="lt-head">即时翻译 <span class="lt-eng"></span></div>
+        <div class="lt-src"></div>
+        <div class="lt-out zh"></div>
+        <div class="row"><button class="lt-cc">精翻</button><button class="lt-save">存为标注</button><button class="lt-memo">存进手帐</button></div>
+      </div>
+      <div id="panel-empty" class="hint">
+        在左侧<b>选中文字即自动翻译</b>，译文显示在上方。<br>
+        选中后还会弹出操作条：<b>高亮·笔记</b> / <b>标签</b> / <b>术语</b> / <b>问 CC</b>。
+      </div>
+      <div id="panel-cards"></div>
+    </div>
+
+    <div id="annos" class="tabpane">
+      <div id="anno-list"></div>
+    </div>
+  </aside>
+</main>
+
+<!-- floating selection toolbar -->
+<div id="sel-toolbar" hidden>
+  <button data-act="note"   title="高亮并写笔记">✎ 笔记</button>
+  <button data-act="tag"    title="打标签">🏷 标签</button>
+  <button data-act="term"   title="术语解释">📖 术语</button>
+  <button data-act="ask"    title="就这段问 CC">？问 CC</button>
+</div>
+
+<script src="/reader/reader.js"></script>
+</body>
+</html>
