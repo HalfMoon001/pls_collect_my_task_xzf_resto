@@ -25,12 +25,14 @@ function mountReader(app, opts) {
   const readerData = path.join(dataDir, 'reader');
   const graphDir = path.join(readerData, 'graph');
   const deckDir = process.env.READER_DECK_DIR || path.join(readerData, 'decks');
+  const docsDir = path.join(readerData, 'docs');          // user-uploaded non-digest documents
   const annoLogDir = path.join(readerData, 'annotations');
 
   // --- first-run seeding ---
   function ensureReaderData() {
     fs.mkdirSync(graphDir, { recursive: true });
     fs.mkdirSync(deckDir, { recursive: true });
+    fs.mkdirSync(docsDir, { recursive: true });
     fs.mkdirSync(annoLogDir, { recursive: true });
     for (const f of ['posts.json', 'entities.json', 'relations.json', 'opinions.json', 'annotations.json']) {
       const dst = path.join(graphDir, f);
@@ -71,6 +73,11 @@ function mountReader(app, opts) {
     return d ? d.file : null;
   }
 
+  // --- user documents (non-digest) ---
+  const docsIndexPath = path.join(docsDir, 'index.json');
+  function loadDocs() { try { return JSON.parse(fs.readFileSync(docsIndexPath, 'utf-8')).docs || []; } catch { return []; } }
+  function saveDocs(docs) { fs.writeFileSync(docsIndexPath, JSON.stringify({ docs }, null, 2), 'utf-8'); }
+
   // --- translation cache (LRU-capped so a long-running server doesn't grow unbounded) ---
   const txCache = new Map();
   const TX_CACHE_MAX = 500;
@@ -109,6 +116,26 @@ function mountReader(app, opts) {
   });
   app.get('/api/reader/translate/status', async (req, res) => res.json(await tx.status()));
 
+  // user documents (non-digest)
+  app.get('/api/reader/docs', (req, res) => res.json({ docs: loadDocs() }));
+  app.get('/api/reader/doc_raw', (req, res) => {
+    const doc = loadDocs().find((x) => x.id === req.query.id);
+    if (!doc) return res.status(404).json({ error: 'no doc' });
+    const p = path.join(docsDir, doc.file);
+    if (!fs.existsSync(p)) return res.status(404).json({ error: 'missing file' });
+    res.type('text/plain; charset=utf-8').send(fs.readFileSync(p));
+  });
+  app.post('/api/reader/doc_delete', (req, res) => {
+    try {
+      const docs = loadDocs();
+      const doc = docs.find((x) => x.id === req.body.id);
+      if (!doc) return res.json({ status: 'not_found' });
+      try { fs.unlinkSync(path.join(docsDir, doc.file)); } catch {}
+      saveDocs(docs.filter((x) => x.id !== req.body.id));
+      res.json({ status: 'deleted', id: req.body.id });
+    } catch (e) { res.status(500).json({ error: String(e.message || e) }); }
+  });
+
   // upload a daily deck HTML into the deck folder. The deck's own date is the source
   // of truth: prefer the date in its <title> ("Hot from Kitchen — YYYY-MM-DD"), then
   // any date in the content, then the filename, then today. We then save it named by
@@ -118,7 +145,28 @@ function mountReader(app, opts) {
     try {
       if (!req.file) return res.status(400).json({ error: '没有文件' });
       const orig = req.file.originalname || 'deck.html';
-      if (!/\.html?$/i.test(orig)) return res.status(400).json({ error: '请上传 .html 文件' });
+      const kind = (req.body && req.body.kind) || 'digest';
+
+      // --- non-digest document: any html/md/txt → library, generic reading only ---
+      if (kind === 'doc') {
+        const extM = orig.match(/\.(html?|md|markdown|txt)$/i);
+        if (!extM) return res.status(400).json({ error: '文档支持 .html / .md / .txt' });
+        const e = extM[1].toLowerCase();
+        const type = /^html?$/.test(e) ? 'html' : (e === 'txt' ? 'txt' : 'md');
+        const dt = new Date();
+        const uploaded = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        const id = 'doc_' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
+        const file = `${id}.${type === 'html' ? 'html' : type}`;
+        fs.writeFileSync(path.join(docsDir, file), req.file.buffer);
+        const title = orig.replace(/\.(html?|md|markdown|txt)$/i, '').trim() || id;
+        const docs = loadDocs();
+        docs.unshift({ id, title, type, file, uploaded });
+        saveDocs(docs);
+        return res.json({ ok: true, kind: 'doc', id, title, type });
+      }
+
+      // --- digest (default) ---
+      if (!/\.html?$/i.test(orig)) return res.status(400).json({ error: '导读请上传 .html 文件' });
       const d = new Date();
       const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const html = req.file.buffer.toString('utf-8');
@@ -134,7 +182,7 @@ function mountReader(app, opts) {
         return res.status(409).json({ error: `导读里没找到日期，按今天 ${date} 会覆盖已有导读。请在文件名或 <title> 里加上 YYYY-MM-DD 再传。` });
       }
       fs.writeFileSync(target, req.file.buffer);
-      res.json({ ok: true, date, file: safe, dateGuessed, dateSource: (req.body && req.body.date) ? 'manual' : titleM ? 'title' : nameM ? 'filename' : contentM ? 'content' : 'today' });
+      res.json({ ok: true, kind: 'digest', date, file: safe, dateGuessed, dateSource: (req.body && req.body.date) ? 'manual' : titleM ? 'title' : nameM ? 'filename' : contentM ? 'content' : 'today' });
     } catch (e) { res.status(500).json({ error: String(e.message || e) }); }
   });
 

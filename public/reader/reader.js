@@ -4,6 +4,15 @@
    own scripts). Selection → floating toolbar → 5 actions, all backed by the
    local CC server. Annotations are text-quote anchored so they survive reloads. */
 
+// annotation highlight styles — shared by deck (digest) and doc rendering
+const ANNO_CSS = `
+  .xzf-anno{border-radius:3px;padding:0 1px;cursor:pointer;transition:outline .1s;}
+  .xzf-note{background:#FBE7A1;} .xzf-tag{background:#CDE7C9;} .xzf-term{background:#D6E4F5;}
+  .xzf-ask{background:#F6D3C6;} .xzf-translate{background:#e7ddf5;}
+  .xzf-task{background:#FFC24D;box-shadow:inset 0 -2px 0 #E08A2B;font-weight:600;}
+  .xzf-anno:hover,.xzf-flash{outline:2px solid var(--vermilion,#B5252B);}
+`;
+// digest deck: neutralise the fixed 16:9 stage → vertical scroll
 const REFLOW_CSS = `
   html,body{width:1920px!important;height:auto!important;overflow:visible!important;background:#fff!important;margin:0!important;}
   .deck-viewport{position:static!important;overflow:visible!important;background:#fff!important;inset:auto!important;}
@@ -14,15 +23,23 @@ const REFLOW_CSS = `
          border-bottom:3px solid #e2ddd4!important;}
   .pad{position:static!important;inset:auto!important;height:auto!important;min-height:980px!important;}
   .reveal,[class*="reveal"]{opacity:1!important;transform:none!important;filter:none!important;}
-  .xzf-anno{border-radius:3px;padding:0 1px;cursor:pointer;transition:outline .1s;}
-  .xzf-note{background:#FBE7A1;} .xzf-tag{background:#CDE7C9;} .xzf-term{background:#D6E4F5;}
-  .xzf-ask{background:#F6D3C6;} .xzf-translate{background:#e7ddf5;}
-  .xzf-task{background:#FFC24D;box-shadow:inset 0 -2px 0 #E08A2B;font-weight:600;}
-  .xzf-anno:hover,.xzf-flash{outline:2px solid var(--vermilion,#B5252B);}
-`;
+` + ANNO_CSS;
+// generic document: readable article styling (md/txt). html docs keep their own CSS + ANNO_CSS.
+const DOC_CSS = `
+  html,body{margin:0!important;background:#fff!important;}
+  body{max-width:820px;margin:0 auto!important;padding:34px 30px 90px!important;
+       font:16px/1.85 "PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:#1a1a1a;}
+  h1,h2,h3{line-height:1.3;} img,table{max-width:100%;}
+  pre{white-space:pre-wrap;word-break:break-word;background:#f5f2ed;padding:12px;border-radius:8px;font-size:14px;}
+  code{background:#f0ece3;padding:1px 4px;border-radius:4px;font-size:.92em;}
+  pre code{background:none;padding:0;}
+  a{color:#2f6da3;}
+` + ANNO_CSS;
 
 const $ = (s) => document.querySelector(s);
-const state = { date: null, graph: null, postBySlide: {}, sel: null, decks: [], dpMonth: null };
+const state = { mode: "digest", date: null, key: null, graph: null, postBySlide: {}, sel: null, decks: [], docs: [], dpMonth: null, curDoc: null };
+// annotations group by a source key: digests use the date, docs use the doc id (old annos only have date)
+const annoKey = (a) => a.source || a.date;
 
 // fetch wrappers that never throw — network/parse failures come back as { error }
 // so every caller can branch on res.error instead of crashing mid-action.
@@ -57,7 +74,9 @@ const setStatus = (t) => { $("#status").textContent = t || ""; };
 async function boot() {
   const { decks } = await api.get("/api/reader/decks");
   state.decks = decks;
+  await refreshDocs();
   bindDatepicker();
+  bindDocPicker();
   bindDropzone();
   $("#btn-upload").onclick = () => $("#file-deck").click();
   $("#file-deck").onchange = uploadDeck;
@@ -71,7 +90,33 @@ async function boot() {
   document.addEventListener("keydown", onEsc);
   checkTx();
   if (decks.length) loadDeck(decks[0].date);
-  else $("#reading").innerHTML = "<p style='margin:auto;color:#888'>还没有导读。把每天的 HTML 丢进 data/reader/decks/ 即可。</p>";
+  else if (state.docs.length) loadDoc(state.docs[0].id);
+  else $("#reading").innerHTML = "<p style='margin:auto;color:#888'>还没有内容。点「上传」拖入一篇导读或任意 .html/.md/.txt 文档。</p>";
+}
+
+// ------------------------------------------------------------- doc picker
+function bindDocPicker() {
+  const btn = $("#doc-btn");
+  if (!btn) return;
+  btn.onclick = (e) => { e.stopPropagation(); const pop = $("#doc-pop"); if (!pop.hidden) { pop.hidden = true; return; } renderDocList(); pop.hidden = false; $("#dp-pop").hidden = true; };
+  document.addEventListener("mousedown", (e) => { if (!e.target.closest("#docpicker")) $("#doc-pop").hidden = true; });
+}
+function renderDocList() {
+  const pop = $("#doc-pop");
+  const TYPE = { html: "HTML", md: "MD", txt: "TXT" };
+  pop.innerHTML = state.docs.length
+    ? state.docs.map((d) => `<div class="doc-item${d.id === state.key ? " sel" : ""}" data-id="${d.id}">
+        <span class="doc-title">${escapeHtml(d.title)}</span><span class="doc-meta">${TYPE[d.type] || d.type} · ${d.uploaded || ""}</span>
+        <button class="doc-del" data-del="${d.id}" title="删除这个文档">✕</button></div>`).join("")
+    : `<p class="hint" style="padding:6px 4px">还没有文档。上传时选「普通文档」即可。</p>`;
+  pop.querySelectorAll(".doc-item").forEach((el) => (el.onclick = (e) => { if (e.target.closest(".doc-del")) return; $("#doc-pop").hidden = true; loadDoc(el.dataset.id); }));
+  pop.querySelectorAll(".doc-del").forEach((b) => (b.onclick = async (e) => {
+    e.stopPropagation();
+    if (!confirm("删除这个文档？（标注也会一并失去入口）")) return;
+    await api.post("/api/reader/doc_delete", { id: b.dataset.del });
+    await refreshDocs(); renderDocList();
+    toast("已删除文档");
+  }));
 }
 
 // ----------------------------------------------- coupling: 存进手帐 + 翻译模型
@@ -118,12 +163,51 @@ function ingest(state, text) {
   if (state !== "busy") ingest._t = setTimeout(() => el.classList.remove("show"), 7000);
 }
 
-// upload today's deck HTML → save → load → 自动抽取收录 → 找任务，全程一个进度条
+// pick a file → ask 导读 or 普通文档 → route. (input onchange + drag-drop both call this)
 function uploadDeck(e) { const f = e.target.files[0]; e.target.value = ""; uploadFile(f); }
 
 async function uploadFile(f) {
   if (!f) return;
-  if (!/\.html?$/i.test(f.name || "")) { toast("请拖入 .html 导读文件"); return; }
+  if (!/\.(html?|md|markdown|txt)$/i.test(f.name || "")) { toast("支持 .html / .md / .txt"); return; }
+  const kind = await chooseKind(f.name);
+  if (!kind) return;
+  if (kind === "doc") return uploadDoc(f);
+  if (!/\.html?$/i.test(f.name || "")) { toast("导读需是 .html 文件"); return; }
+  uploadDigest(f);
+}
+
+// small in-app chooser modal → resolves "digest" | "doc" | null
+function chooseKind(name) {
+  return new Promise((resolve) => {
+    const m = document.createElement("div"); m.id = "kind-modal";
+    m.innerHTML = `<div class="km-box"><div class="km-t">「${escapeHtml(name)}」按什么读？</div>
+      <div class="km-row"><button class="km-b digest">📅 导读<small>抽取收录·演变追踪·找任务</small></button>
+      <button class="km-b doc">📄 普通文档<small>只阅读 + 标注 + 翻译</small></button></div>
+      <button class="km-cancel">取消</button></div>`;
+    document.body.appendChild(m);
+    const done = (v) => { m.remove(); resolve(v); };
+    m.querySelector(".digest").onclick = () => done("digest");
+    m.querySelector(".doc").onclick = () => done("doc");
+    m.querySelector(".km-cancel").onclick = () => done(null);
+    m.addEventListener("mousedown", (e) => { if (e.target === m) done(null); });
+  });
+}
+
+// upload a generic document (html/md/txt) → library → open it (no extract/tasks)
+async function uploadDoc(f) {
+  ingest("busy", "上传文档…");
+  try {
+    const fd = new FormData(); fd.append("deck", f); fd.append("kind", "doc");
+    const res = await fetch("/api/reader/upload", { method: "POST", body: fd }).then((r) => r.json());
+    if (res.error) { ingest("error", "上传失败：" + res.error); return; }
+    await refreshDocs();
+    ingest("done", `已添加文档 · ${res.title}`);
+    loadDoc(res.id);
+  } catch (err) { ingest("error", "上传失败：" + err.message); }
+}
+
+// upload a digest HTML → save → load → 自动抽取收录 → 找任务，全程一个进度条
+async function uploadDigest(f) {
   ingest("busy", "上传中…");
   try {
     const fd = new FormData(); fd.append("deck", f);
@@ -308,9 +392,10 @@ function drawCal() {
 
 // -------------------------------------------------------------- deck loading
 async function loadDeck(date) {
-  state.date = date;
+  state.mode = "digest"; state.date = date; state.key = date; state.curDoc = null;
   $("#dp-btn").textContent = "📅 " + date;
   $("#dp-pop").hidden = true;
+  if ($("#doc-btn")) $("#doc-btn").textContent = "📄 文档";
   setStatus("载入…");
   await refreshGraph();
   const raw = await fetch("/api/reader/deck_raw?date=" + encodeURIComponent(date)).then((r) => r.text());
@@ -318,6 +403,61 @@ async function loadDeck(date) {
   const iframe = $("#deck");
   iframe.onload = () => onDeckReady(iframe);
   iframe.srcdoc = html;
+}
+
+// ----------------------------------------------------------- generic documents
+async function refreshDocs() {
+  try { state.docs = (await api.get("/api/reader/docs")).docs || []; } catch { state.docs = []; }
+}
+
+async function loadDoc(id) {
+  const doc = state.docs.find((d) => d.id === id) || (await refreshDocs(), state.docs.find((d) => d.id === id));
+  if (!doc) { toast("找不到这个文档"); return; }
+  state.mode = "doc"; state.curDoc = doc; state.key = id; state.date = null;
+  if ($("#doc-btn")) $("#doc-btn").textContent = "📄 " + (doc.title.length > 14 ? doc.title.slice(0, 14) + "…" : doc.title);
+  $("#dp-btn").textContent = "📅 选择日期";
+  $("#dp-pop").hidden = true; if ($("#doc-pop")) $("#doc-pop").hidden = true;
+  setStatus("载入…");
+  await refreshGraph();
+  const raw = await fetch("/api/reader/doc_raw?id=" + encodeURIComponent(id)).then((r) => r.text());
+  const iframe = $("#deck");
+  iframe.onload = () => onDeckReady(iframe);   // shared: no .slide → body becomes the single section
+  iframe.srcdoc = buildDocHtml(doc, raw);
+}
+
+function buildDocHtml(doc, raw) {
+  if (doc.type === "html") {
+    const h = raw.replace(/<script[\s\S]*?<\/script>/gi, "");   // drop the doc's own scripts
+    const css = `<style id="xzf-doc">${ANNO_CSS}</style>`;       // keep its styling, just add highlight CSS
+    return /<\/head>/i.test(h) ? h.replace(/<\/head>/i, css + "</head>") : css + h;
+  }
+  const body = doc.type === "md" ? mdToHtml(raw) : `<pre>${escapeHtml(raw)}</pre>`;
+  return `<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><style id="xzf-doc">${DOC_CSS}</style></head><body><h1>${escapeHtml(doc.title)}</h1>${body}</body></html>`;
+}
+
+// minimal Markdown → HTML (headings/bold/italic/code/lists/links) — enough to read & annotate
+function mdToHtml(md) {
+  const esc = (s) => s.replace(/[&<>]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[m]));
+  const blocks = [];
+  md = md.replace(/```([\s\S]*?)```/g, (_, c) => { blocks.push(`<pre><code>${esc(c)}</code></pre>`); return ` ${blocks.length - 1} `; });
+  const inline = (t) => esc(t)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+  let html = "", inList = false;
+  for (const line of md.split(/\r?\n/)) {
+    const ph = line.match(/^ (\d+) $/);
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    const li = line.match(/^\s*[-*+]\s+(.*)$/);
+    if (ph) { if (inList) { html += "</ul>"; inList = false; } html += blocks[+ph[1]]; }
+    else if (h) { if (inList) { html += "</ul>"; inList = false; } html += `<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`; }
+    else if (li) { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${inline(li[1])}</li>`; }
+    else if (line.trim() === "") { if (inList) { html += "</ul>"; inList = false; } }
+    else { if (inList) { html += "</ul>"; inList = false; } html += `<p>${inline(line)}</p>`; }
+  }
+  if (inList) html += "</ul>";
+  return html;
 }
 
 function injectReflow(raw) {
@@ -339,7 +479,7 @@ function onDeckReady(iframe) {
   fitDeck();
   restoreAnnotations();
   renderAnnoList();
-  setStatus(state.postBySlide && Object.keys(state.postBySlide).length ? "" : "未入图谱");
+  setStatus(state.mode === "doc" || (state.postBySlide && Object.keys(state.postBySlide).length) ? "" : "未入图谱");
 }
 
 // deck auto-fits to the reading column width — wider left column ⇒ bigger deck
@@ -347,6 +487,11 @@ function fitDeck() {
   const iframe = $("#deck");
   const idoc = iframe.contentDocument;
   if (!idoc || !idoc.body) return;
+  if (state.mode === "doc") {                       // docs read at natural width — no 1920 zoom
+    idoc.body.style.zoom = "";
+    requestAnimationFrame(() => { iframe.style.height = idoc.body.scrollHeight + "px"; });
+    return;
+  }
   const z = Math.max(0.2, +(iframe.clientWidth / 1920).toFixed(3));
   idoc.body.style.zoom = z;
   requestAnimationFrame(() => { iframe.style.height = idoc.body.scrollHeight + "px"; });
@@ -393,8 +538,9 @@ function onSelect() {
   if (text.length < 1) return hideToolbar();
   const range = s.getRangeAt(0);
   const slideEl = slideOf(range.startContainer);
-  const slideIndex = slideEl ? +slideEl.dataset.slideIndex : -1;
-  const full = slideEl ? slideEl.textContent : text;
+  const slideIndex = slideEl ? +slideEl.dataset.slideIndex : 0;   // docs: single section 0
+  const root = slideEl || idoc.body;
+  const full = root.textContent;
   const qi = full.indexOf(text);
   state.sel = {
     text, slideIndex,
@@ -476,7 +622,7 @@ function bindToolbar() {
 function newAnno(kind, sel = state.sel) {
   return {
     id: "a_" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
-    created_at: new Date().toISOString(), date: state.date,
+    created_at: new Date().toISOString(), date: state.date, source: state.key,
     post_id: state.postBySlide[sel.slideIndex] || null,
     slide_index: sel.slideIndex,
     anchor: { quote: sel.text, prefix: sel.prefix, suffix: sel.suffix, slide_index: sel.slideIndex },
@@ -591,7 +737,7 @@ async function cardAsk() {
 
 function slideText(i) {
   const idoc = $("#deck").contentDocument;
-  const s = idoc.querySelector(`.slide[data-slide-index="${i}"]`);
+  const s = idoc.querySelector(`.slide[data-slide-index="${i}"]`) || (state.mode === "doc" ? idoc.body : null);
   return s ? s.textContent.replace(/\s+/g, " ").trim().slice(0, 1200) : "";
 }
 
@@ -600,7 +746,7 @@ function slideText(i) {
 // like restoreAnnotations can count anchors that drifted off the current deck).
 function highlight(anno) {
   const idoc = $("#deck").contentDocument;
-  const slideEl = idoc.querySelector(`.slide[data-slide-index="${anno.anchor.slide_index}"]`);
+  const slideEl = idoc.querySelector(`.slide[data-slide-index="${anno.anchor.slide_index}"]`) || (state.mode === "doc" ? idoc.body : null);
   if (!slideEl) return false;
   const range = locateQuote(idoc, slideEl, anno.anchor);
   if (!range) return false;
@@ -675,7 +821,7 @@ function wrapRange(idoc, range, anno) {
 
 function restoreAnnotations() {
   let missed = 0;
-  (state.graph.annotations || []).filter((a) => a.date === state.date)
+  (state.graph.annotations || []).filter((a) => annoKey(a) === state.key)
     .forEach((a) => { if (a.anchor && !highlight(a)) missed++; });
   if (missed) { setStatus(`${missed} 条标注未能在正文里定位（正文可能已更新，标注仍在右栏列表）`); setTimeout(() => setStatus(""), 4000); }
 }
@@ -707,7 +853,7 @@ const flashSaved = (b) => { const s = document.createElement("span"); s.textCont
 
 // ----------------------------------------------------------------- anno list
 function renderAnnoList() {
-  const list = (state.graph.annotations || []).filter((a) => a.date === state.date)
+  const list = (state.graph.annotations || []).filter((a) => annoKey(a) === state.key)
     .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   $("#anno-count").textContent = list.length;
   const KIND = { note: "笔记", tag: "标签", term: "术语", ask: "问CC", translate: "翻译", task: "📌 任务" };

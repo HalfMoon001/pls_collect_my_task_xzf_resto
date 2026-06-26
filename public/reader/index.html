@@ -11,11 +11,15 @@
   <a class="back-memo" href="/" title="返回记忆手帐">← 手帐</a>
   <div class="brand">小钻风餐厅</div>
   <div id="datepicker">
-    <button id="dp-btn" title="选择日期">📅 选择日期</button>
+    <button id="dp-btn" title="选择导读日期">📅 选择日期</button>
     <div id="dp-pop" hidden></div>
   </div>
-  <button id="btn-upload" title="上传今天的导读 HTML（自动抽取收录到演变追踪）">⬆ 上传导读</button>
-  <input type="file" id="file-deck" accept=".html,.htm" hidden>
+  <div id="docpicker">
+    <button id="doc-btn" title="我的文档">📄 文档</button>
+    <div id="doc-pop" hidden></div>
+  </div>
+  <button id="btn-upload" title="上传导读或任意 .html/.md/.txt 文档">⬆ 上传</button>
+  <input type="file" id="file-deck" accept=".html,.htm,.md,.markdown,.txt" hidden>
   <a id="btn-graph" href="/reader/graph">演变追踪</a>
   <a id="btn-learn" href="/reader/learn">学习</a>
   <label class="autotx" title="选中文字时自动翻译"><input type="checkbox" id="auto-tx"> 选中即译</label>
