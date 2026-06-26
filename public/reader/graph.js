@@ -155,21 +155,67 @@ function buildTypeFilters() {
   };
 }
 
-// ----------------------------------------------------------------- timeline
+// ------------------------------------------------------- entity tracker（演变追踪）
+// Pick one entity → see, chronologically, every day it was mentioned: the posts
+// that touched it and how Yibo/Claude's stance on it evolved. Uses the graph's
+// mentions / opinions.about / same_thread_as so it shows EVOLUTION, not a flat dump.
 function buildTimeline() {
-  const days = [...new Set(G.posts.map((p) => p.date))].sort();
-  const opByPost = {};
-  G.opinions.forEach((o) => (opByPost[o.post_id] = opByPost[o.post_id] || []).push(o));
-  $("#timeline-view").innerHTML = days.map((d) => {
-    const posts = G.posts.filter((p) => p.date === d).sort((a, b) => a.slide_index - b.slide_index);
-    return `<div class="tl-day"><h2>${d}</h2>${posts.map((p) => `
-      <div class="tl-post">
-        <span class="cat">${p.category || ""}${p.is_long_read ? " · long read" : ""}</span>
-        <h4>${p.headline}</h4>
-        <div class="sum">${p.body_summary || ""}</div>
-        ${(opByPost[p.id] || []).map((o) => `<div class="op ${o.holder}"><b>${o.label}:</b> ${o.text}</div>`).join("")}
-      </div>`).join("")}</div>`;
+  // rank by *trackable* activity (posts mentioning + opinions about), not the raw
+  // mentions array — so the default pick and the counts reflect what you'll see.
+  const activity = (e) =>
+    G.posts.filter((p) => (e.mentions || []).includes(p.id) || (p.mentions || []).includes(e.id)).length +
+    G.opinions.filter((o) => (o.about || []).includes(e.id)).length;
+  const ents = G.entities.map((e) => ({ e, n: activity(e) })).sort((a, b) => b.n - a.n);
+  const opts = ents.map(({ e, n }) => `<option value="${e.id}">${e.canonical_name} · ${e.type} (${n})</option>`).join("");
+  $("#timeline-view").innerHTML =
+    `<div class="track-bar">追踪：<select id="track-entity">${opts}</select>
+       <span class="track-hint">选一个公司／人／主题，看它跨天怎么被提及、立场怎么变。</span></div>
+     <div id="track-body"></div>`;
+  if (!ents.length) { $("#track-body").innerHTML = `<p class="hint">图谱里还没有实体。</p>`; return; }
+  const sel = $("#track-entity");
+  sel.onchange = () => renderTrack(sel.value);
+  renderTrack(ents[0].e.id);   // default: most-active entity
+}
+
+function renderTrack(id) {
+  const e = G.entities.find((x) => x.id === id);
+  if (!e) { $("#track-body").innerHTML = `<p class="hint">没有这个实体了。</p>`; return; }
+  const mentioned = G.posts.filter((p) => (e.mentions || []).includes(p.id) || (p.mentions || []).includes(e.id));
+  const opins = G.opinions.filter((o) => (o.about || []).includes(e.id));
+  const byDate = {};
+  const bucket = (d) => (byDate[d] = byDate[d] || { posts: [], ops: [] });
+  mentioned.forEach((p) => bucket(p.date).posts.push(p));
+  opins.forEach((o) => bucket(o.date).ops.push(o));
+  const dates = Object.keys(byDate).sort();   // oldest → newest, read the evolution forward
+  const rels = G.relations.filter((r) => r.src === e.id || r.dst === e.id);
+  const relChips = rels.map((r) => {
+    const other = r.src === e.id ? r.dst : r.src;
+    const oe = G.entities.find((x) => x.id === other);
+    const thread = r.type === "same_thread_as";
+    return `<span class="chip${thread ? " thread" : ""}" data-ent="${other}">${thread ? "🔗 " : ""}${oe ? oe.canonical_name : other}</span>`;
   }).join("");
+  const span = dates.length ? `${dates[0]} → ${dates[dates.length - 1]}` : (e.first_seen || "—");
+
+  const dayHtml = dates.length ? dates.map((d) => {
+    const { posts, ops } = byDate[d];
+    return `<div class="tl-day"><h2>${d}</h2>
+      ${posts.map((p) => `<div class="tl-post"><span class="cat">${p.category || ""}${p.is_long_read ? " · long read" : ""}</span><h4>${p.headline || ""}</h4><div class="sum">${p.body_summary || ""}</div></div>`).join("")}
+      ${ops.map((o) => `<div class="op ${o.holder}"><b>${o.label || o.holder}${o.stance ? ` · ${o.stance}` : ""}:</b> ${o.text || ""}</div>`).join("")}
+    </div>`;
+  }).join("") : `<p class="hint">这个实体还没有可追踪的提及或观点。</p>`;
+
+  $("#track-body").innerHTML =
+    `<div class="track-head">
+       <div class="type">${e.type}${e.aliases && e.aliases.length ? ` · aka ${e.aliases.join(", ")}` : ""}</div>
+       <h3>${e.canonical_name}</h3>
+       ${e.description ? `<p>${e.description}</p>` : ""}
+       <div class="track-meta">提及 ${mentioned.length} 篇 · 观点 ${opins.length} 条 · ${span}</div>
+       ${relChips ? `<div class="track-rels"><b>关联</b> ${relChips}</div>` : ""}
+     </div>${dayHtml}`;
+  $("#track-body").querySelectorAll(".chip[data-ent]").forEach((c) => (c.onclick = () => {
+    const t = c.dataset.ent;
+    if (G.entities.some((x) => x.id === t)) { $("#track-entity").value = t; renderTrack(t); }
+  }));
 }
 
 // ----------------------------------------------------------------- opinions

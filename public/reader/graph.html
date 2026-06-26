@@ -55,6 +55,20 @@ aside .op .h{font-size:11px;color:var(--mute);font-family:"IBM Plex Mono",monosp
 .tl-post .sum{font-size:13px;color:#444;line-height:1.6;}
 .tl-post .op{font-size:13px;border-left:3px solid var(--denim);padding-left:8px;margin-top:8px;color:#333;}
 .tl-post .op.yibo{border-color:var(--vermilion);} .tl-post .op.claude{border-color:#8d7bbd;}
+/* entity tracker（演变追踪） */
+.track-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:13px;}
+.track-bar select{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;max-width:340px;}
+.track-bar .track-hint{color:var(--mute);font-size:12px;}
+.track-head{background:#fff;border:1px solid var(--line);border-left:4px solid var(--navy);border-radius:10px;padding:12px 14px;margin-bottom:18px;max-width:900px;}
+.track-head .type{font-size:11px;font-family:"IBM Plex Mono",monospace;color:var(--mute);text-transform:uppercase;}
+.track-head h3{margin:3px 0 6px;}
+.track-head p{font-size:13px;color:#444;line-height:1.6;margin:0 0 8px;}
+.track-head .track-meta{font-size:12px;color:var(--mute);font-family:"IBM Plex Mono",monospace;}
+.track-head .track-rels{margin-top:8px;font-size:12px;}
+.track-head .track-rels .chip{display:inline-block;background:#eef2f7;border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin:3px 3px 0 0;font-size:12px;cursor:pointer;}
+.track-head .track-rels .chip.thread{background:#fbeae0;border-color:var(--vermilion);color:var(--vermilion);}
+.tl-day>.op{font-size:13px;background:#fff;border:1px solid var(--line);border-left:3px solid var(--denim);border-radius:8px;padding:8px 10px;margin:8px 0;color:#333;line-height:1.6;}
+.tl-day>.op.yibo{border-left-color:var(--vermilion);} .tl-day>.op.claude{border-left-color:#8d7bbd;}
 /* opinions view */
 .opcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;max-width:900px;}
 .opcard .meta{font-size:11px;font-family:"IBM Plex Mono",monospace;color:var(--mute);}
@@ -76,7 +90,7 @@ aside .op .h{font-size:11px;color:var(--mute);font-family:"IBM Plex Mono",monosp
 <header>
   <span class="brand">知识图谱</span>
   <button class="tabbtn active" data-view="cy">实体网络</button>
-  <button class="tabbtn" data-view="timeline-view">时间线</button>
+  <button class="tabbtn" data-view="timeline-view">演变追踪</button>
   <button class="tabbtn" data-view="opinions-view">观点</button>
   <button class="tabbtn" data-view="ask-view">问答</button>
   <input type="search" id="search" placeholder="搜索实体…">
