@@ -139,11 +139,20 @@ function searchFocus(q) {
 
 function buildTypeFilters() {
   const types = [...new Set(G.entities.map((e) => e.type))];
-  $("#type-filters").innerHTML = types.map((t) => `<label><input type="checkbox" checked data-t="${t}"><span style="color:${TYPE_COLOR[t]||'#fff'}">●</span>${t}</label>`).join("");
-  $("#type-filters").querySelectorAll("input").forEach((cb) => (cb.onchange = () => {
-    const on = new Set([...$("#type-filters").querySelectorAll("input:checked")].map((x) => x.dataset.t));
+  const applyFilter = () => {
+    const on = new Set([...$("#type-filters").querySelectorAll("input[data-t]:checked")].map((x) => x.dataset.t));
     cy.nodes().forEach((n) => n.style("display", on.has(n.data("type")) ? "element" : "none"));
-  }));
+    const all = $("#type-all");
+    if (all) all.checked = on.size === types.length;   // keep 全选 in sync with individual toggles
+  };
+  $("#type-filters").innerHTML =
+    `<label class="all-row"><input type="checkbox" id="type-all" checked>全选</label>` +
+    types.map((t) => `<label><input type="checkbox" checked data-t="${t}"><span style="color:${TYPE_COLOR[t]||'#fff'}">●</span>${t}</label>`).join("");
+  $("#type-filters").querySelectorAll("input[data-t]").forEach((cb) => (cb.onchange = applyFilter));
+  $("#type-all").onchange = (e) => {
+    $("#type-filters").querySelectorAll("input[data-t]").forEach((cb) => (cb.checked = e.target.checked));
+    applyFilter();
+  };
 }
 
 // ----------------------------------------------------------------- timeline

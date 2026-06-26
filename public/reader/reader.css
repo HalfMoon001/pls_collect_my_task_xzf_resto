@@ -88,12 +88,12 @@ main{flex:1;display:flex;min-height:0;}
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes pop{from{opacity:0;transform:translateY(4px);}}
 
-#anno-list .anno-item{position:relative;background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px;margin-bottom:9px;}
+#anno-list .anno-item{position:relative;background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px;margin-bottom:9px;cursor:pointer;}
 #anno-list .anno-item:hover{border-color:var(--denim);}
+#anno-list .anno-item:hover .q{color:var(--denim);}
 #anno-list .anno-item .k{font-size:10px;font-family:"IBM Plex Mono",monospace;color:#fff;padding:1px 6px;border-radius:5px;background:var(--mute);}
 .k.kind-note{background:#E0B73A;} .k.kind-tag{background:#5FA463;} .k.kind-term{background:var(--denim);} .k.kind-ask{background:var(--vermilion);} .k.kind-translate{background:#8d7bbd;}
-#anno-list .q{font-size:12px;color:var(--mute);margin:6px 0 0;font-style:italic;cursor:pointer;}
-#anno-list .q:hover{color:var(--denim);text-decoration:underline;}
+#anno-list .q{font-size:12px;color:var(--mute);margin:6px 0 0;font-style:italic;}
 #anno-list .p{font-size:13px;margin:5px 0 0;}
 #anno-list .p.ans{color:#444;}
 /* editable note/tag in the list */

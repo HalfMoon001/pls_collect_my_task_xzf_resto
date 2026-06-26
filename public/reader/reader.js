@@ -637,9 +637,10 @@ function renderAnnoList() {
     const item = document.createElement("div");
     item.className = "anno-item"; item.dataset.id = a.id;
     item.innerHTML = `<span class="k kind-${a.kind}">${KIND[a.kind] || a.kind}</span>
-      <p class="q" title="点击跳到正文">“${escapeHtml((a.anchor?.quote || "").slice(0, 90))}”</p>
+      <p class="q">“${escapeHtml((a.anchor?.quote || "").slice(0, 90))}”</p>
       <div class="anno-body"></div>`;
-    item.querySelector(".q").onclick = () => scrollToAnno(a.id);  // jump to highlight in the deck
+    // click anywhere in the item jumps to the highlight — except on interactive controls
+    item.onclick = (e) => { if (e.target.closest("button, input, textarea")) return; scrollToAnno(a.id); };
     const body = item.querySelector(".anno-body");
     if (a.kind === "note" || a.kind === "tag") {
       mountEditable(a, body, item, false);                         // editable across refreshes/reloads

@@ -19,7 +19,9 @@ header a{color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.3);p
 .tabbtn.active{background:#fff;color:var(--navy);font-weight:700;}
 header input[type=search]{font:inherit;padding:5px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;}
 header input::placeholder{color:rgba(255,255,255,.6);}
-header .filters{display:flex;gap:6px;font-size:12px;align-items:center;}
+header .filters{display:flex;gap:6px;font-size:12px;align-items:center;flex-wrap:wrap;}
+header .filters label{display:inline-flex;align-items:center;gap:2px;cursor:pointer;}
+header .filters .all-row{font-weight:700;border-right:1px solid rgba(255,255,255,.3);padding-right:8px;margin-right:2px;}
 header label{display:flex;gap:3px;align-items:center;cursor:pointer;}
 main{flex:1;display:flex;min-height:0;}
 #stage{flex:1;position:relative;background:#f3f0e9;}
