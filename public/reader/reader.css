@@ -119,6 +119,11 @@ main{flex:1;display:flex;min-height:0;}
   padding:5px 10px;font:inherit;font-size:12px;cursor:pointer;font-weight:600;}
 .lt-memo:hover,.card .row .memo:hover,#anno-list .memo:hover{filter:brightness(1.05);}
 .lt-memo:disabled,.card .row .memo:disabled,#anno-list .memo:disabled{opacity:.6;cursor:default;}
+#ingest{position:fixed;top:54px;left:50%;transform:translateX(-50%) translateY(-10px);z-index:120;display:flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:9px 18px;border-radius:22px;font-size:13px;box-shadow:0 6px 22px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:90vw;}
+#ingest.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#ingest.done{background:#2f7d4f;}
+#ingest.error{background:var(--vermilion);}
+#ingest .spin{border-color:rgba(255,255,255,.4);border-top-color:#fff;}
 #drop-overlay{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:rgba(15,33,71,.55);backdrop-filter:blur(1px);}
 #drop-overlay.show{display:flex;}
 #drop-overlay .box{background:#fff;border:3px dashed var(--denim,#80B3D2);border-radius:16px;padding:36px 56px;text-align:center;font-size:20px;font-weight:700;color:var(--navy,#0F2147);box-shadow:0 8px 40px rgba(0,0,0,.3);pointer-events:none;}

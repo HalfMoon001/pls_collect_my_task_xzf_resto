@@ -107,38 +107,65 @@ function toast(msg) {
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800);
 }
 
-// upload today's deck HTML → save to deck folder → load it (+ auto-ingest)
+// Prominent ingest progress pill. state: "busy" (spinner, stays) | "done" | "error" (auto-hide).
+// Upload is instant but extract+detect are ~20s of background CC — this makes that visible.
+function ingest(state, text) {
+  let el = $("#ingest");
+  if (!el) { el = document.createElement("div"); el.id = "ingest"; document.body.appendChild(el); }
+  clearTimeout(ingest._t);
+  el.className = "show " + state;
+  el.innerHTML = (state === "busy" ? `<span class="spin"></span> ` : state === "done" ? "✅ " : "⚠️ ") + text;
+  if (state !== "busy") ingest._t = setTimeout(() => el.classList.remove("show"), 7000);
+}
+
+// upload today's deck HTML → save → load → 自动抽取收录 → 找任务，全程一个进度条
 function uploadDeck(e) { const f = e.target.files[0]; e.target.value = ""; uploadFile(f); }
 
 async function uploadFile(f) {
   if (!f) return;
   if (!/\.html?$/i.test(f.name || "")) { toast("请拖入 .html 导读文件"); return; }
-  setStatus("上传中…");
+  ingest("busy", "上传中…");
   try {
     const fd = new FormData(); fd.append("deck", f);
     const res = await fetch("/api/reader/upload", { method: "POST", body: fd }).then((r) => r.json());
-    if (res.error) { setStatus("上传失败"); alert("上传失败：" + res.error); return; }
+    if (res.error) { ingest("error", "上传失败：" + res.error); return; }
     const { decks } = await api.get("/api/reader/decks");
     state.decks = decks;
-    toast("已上传导读 · " + res.date);
     loadDeck(res.date);
-    await autoExtract(res.date);    // 抽取收录：公司/观点/动态进演变追踪 + 学习
-    autoDetectTasks(res.date);      // 再扫一遍评论里的行动任务并高亮
-  } catch (err) { setStatus("上传失败"); alert("上传失败：" + err.message); }
+
+    ingest("busy", `①/② 解析收录这篇…（CC，约十几秒）`);
+    const ex = await autoExtract(res.date);
+    if (ex && ex.error) { ingest("error", "抽取失败：" + ex.error + "（重新上传可重试）"); return; }
+
+    ingest("busy", `②/② 找评论里的任务…（CC）`);
+    const tk = await autoDetectTasks(res.date);
+
+    const exMsg = ex && ex.status === "already_extracted"
+      ? "已收录过"
+      : `收录 ${ex?.added?.entities || 0} 实体 / ${ex?.added?.opinions || 0} 观点`;
+    const tkMsg = tk && tk.error ? "，任务检测失败" : `，${(tk && tk.added) || 0} 个任务 📌`;
+    ingest("done", `${res.date} 已完成 · ${exMsg}${tkMsg}`);
+  } catch (err) { ingest("error", "上传失败：" + err.message); }
 }
 
-// scan the day's commentary for action-tasks (CC) and highlight them in the deck.
+// extract a deck into the store; returns the server result. Idempotent.
+async function autoExtract(date) {
+  const res = await ccPost("/api/reader/extract", { date }, () => ingest("busy", "CC 排队中，待解析收录…"));
+  if (res && !res.error && res.status !== "already_extracted") await refreshGraph();
+  return res;
+}
+
+// scan the day's commentary for action-tasks (CC) and highlight them; returns the result.
 async function autoDetectTasks(date) {
-  setStatus("正在找评论里的任务…（CC）");
-  const res = await ccPost("/api/reader/detect_tasks", { date }, () => setStatus("CC 排队中，待找任务…"));
-  setStatus("");
-  if (!res || res.error) { if (res && res.error) toast("找任务失败：" + res.error); return; }
-  await refreshGraph();
-  if (state.date === date) {
-    (res.newTasks || []).forEach((a) => highlight(a));   // highlight just the new ones (avoid re-wrapping)
-    renderAnnoList();
+  const res = await ccPost("/api/reader/detect_tasks", { date }, () => ingest("busy", "CC 排队中，待找任务…"));
+  if (res && !res.error) {
+    await refreshGraph();
+    if (state.date === date) {
+      (res.newTasks || []).forEach((a) => highlight(a));   // highlight just the new ones (avoid re-wrapping)
+      renderAnnoList();
+    }
   }
-  if (res.added) toast(`发现 ${res.added} 个任务，已高亮 📌`);
+  return res;
 }
 
 // drag a .html anywhere onto the page to upload it (same flow as the button).
