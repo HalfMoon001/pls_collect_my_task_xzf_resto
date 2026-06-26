@@ -218,11 +218,11 @@ async function uploadDigest(f) {
     loadDeck(res.date);
     if (res.dateGuessed) toast(`没在导读里找到日期，暂按今天 ${res.date}（建议文件名或标题带 YYYY-MM-DD）`);
 
-    ingest("busy", `①/② 解析收录这篇…（CC，约十几秒）`);
+    ingest("busy", `第 1/2 步 · 解析收录这篇…（CC，约十几秒）`);
     const ex = await autoExtract(res.date);
     if (ex && ex.error) { ingest("error", "抽取失败：" + ex.error + "（重新上传可重试）"); return; }
 
-    ingest("busy", `②/② 找评论里的任务…（CC）`);
+    ingest("busy", `第 2/2 步 · 找评论里的任务…（CC）`);
     const tk = await autoDetectTasks(res.date);
 
     const exMsg = ex && ex.status === "already_extracted"
