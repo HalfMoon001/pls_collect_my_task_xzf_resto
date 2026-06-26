@@ -132,6 +132,7 @@ async function uploadFile(f) {
     const { decks } = await api.get("/api/reader/decks");
     state.decks = decks;
     loadDeck(res.date);
+    if (res.dateGuessed) toast(`没在导读里找到日期，暂按今天 ${res.date}（建议文件名或标题带 YYYY-MM-DD）`);
 
     ingest("busy", `①/② 解析收录这篇…（CC，约十几秒）`);
     const ex = await autoExtract(res.date);

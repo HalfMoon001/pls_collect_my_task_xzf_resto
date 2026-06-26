@@ -109,21 +109,32 @@ function mountReader(app, opts) {
   });
   app.get('/api/reader/translate/status', async (req, res) => res.json(await tx.status()));
 
-  // upload a daily deck HTML into the deck folder (filename should carry a date)
+  // upload a daily deck HTML into the deck folder. The deck's own date is the source
+  // of truth: prefer the date in its <title> ("Hot from Kitchen — YYYY-MM-DD"), then
+  // any date in the content, then the filename, then today. We then save it named by
+  // that resolved date so the deck list (which reads the date off the filename) agrees.
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
   app.post('/api/reader/upload', upload.single('deck'), (req, res) => {
     try {
       if (!req.file) return res.status(400).json({ error: '没有文件' });
       const orig = req.file.originalname || 'deck.html';
       if (!/\.html?$/i.test(orig)) return res.status(400).json({ error: '请上传 .html 文件' });
-      const m = orig.match(/(\d{4}-\d{2}-\d{2})/);
       const d = new Date();
       const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const date = (req.body && req.body.date) || (m ? m[1] : today);
-      const base = m ? path.basename(orig) : `${date}.html`;
-      const safe = base.replace(/[/\\]/g, '_');
-      fs.writeFileSync(path.join(deckDir, safe), req.file.buffer);
-      res.json({ ok: true, date, file: safe });
+      const html = req.file.buffer.toString('utf-8');
+      const titleM = html.match(/Hot from Kitchen[^0-9]{0,8}(\d{4}-\d{2}-\d{2})/i);
+      const contentM = html.match(/(\d{4}-\d{2}-\d{2})/);
+      const nameM = orig.match(/(\d{4}-\d{2}-\d{2})/);
+      const date = (req.body && req.body.date) || (titleM && titleM[1]) || (nameM && nameM[1]) || (contentM && contentM[1]) || today;
+      const dateGuessed = !((req.body && req.body.date) || titleM || nameM || contentM);
+      const safe = `${date}.html`;   // canonical name = resolved date → filename/content/list all agree
+      const target = path.join(deckDir, safe);
+      // safety: a date-less deck must never silently overwrite an existing day's deck
+      if (dateGuessed && fs.existsSync(target)) {
+        return res.status(409).json({ error: `导读里没找到日期，按今天 ${date} 会覆盖已有导读。请在文件名或 <title> 里加上 YYYY-MM-DD 再传。` });
+      }
+      fs.writeFileSync(target, req.file.buffer);
+      res.json({ ok: true, date, file: safe, dateGuessed, dateSource: (req.body && req.body.date) ? 'manual' : titleM ? 'title' : nameM ? 'filename' : contentM ? 'content' : 'today' });
     } catch (e) { res.status(500).json({ error: String(e.message || e) }); }
   });
 
