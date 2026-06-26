@@ -92,7 +92,7 @@ main{flex:1;display:flex;min-height:0;}
 #anno-list .anno-item:hover{border-color:var(--denim);}
 #anno-list .anno-item:hover .q{color:var(--denim);}
 #anno-list .anno-item .k{font-size:10px;font-family:"IBM Plex Mono",monospace;color:#fff;padding:1px 6px;border-radius:5px;background:var(--mute);}
-.k.kind-note{background:#E0B73A;} .k.kind-tag{background:#5FA463;} .k.kind-term{background:var(--denim);} .k.kind-ask{background:var(--vermilion);} .k.kind-translate{background:#8d7bbd;}
+.k.kind-note{background:#E0B73A;} .k.kind-tag{background:#5FA463;} .k.kind-term{background:var(--denim);} .k.kind-ask{background:var(--vermilion);} .k.kind-translate{background:#8d7bbd;} .k.kind-task{background:#E08A2B;}
 #anno-list .q{font-size:12px;color:var(--mute);margin:6px 0 0;font-style:italic;}
 #anno-list .p{font-size:13px;margin:5px 0 0;}
 #anno-list .p.ans{color:#444;}

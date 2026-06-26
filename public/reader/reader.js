@@ -17,6 +17,7 @@ const REFLOW_CSS = `
   .xzf-anno{border-radius:3px;padding:0 1px;cursor:pointer;transition:outline .1s;}
   .xzf-note{background:#FBE7A1;} .xzf-tag{background:#CDE7C9;} .xzf-term{background:#D6E4F5;}
   .xzf-ask{background:#F6D3C6;} .xzf-translate{background:#e7ddf5;}
+  .xzf-task{background:#FFC24D;box-shadow:inset 0 -2px 0 #E08A2B;font-weight:600;}
   .xzf-anno:hover,.xzf-flash{outline:2px solid var(--vermilion,#B5252B);}
 `;
 
@@ -75,10 +76,10 @@ async function boot() {
 
 // ----------------------------------------------- coupling: 存进手帐 + 翻译模型
 // turn any reader output into a 记忆手帐 memo card (tagged 小钻风)
-async function toMemo(content, btn) {
+async function toMemo(content, btn, tags = ["小钻风"]) {
   if (!content) return;
   try {
-    await fetch("/api/memos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content, tags: ["小钻风"] }) });
+    await fetch("/api/memos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content, tags }) });
     if (btn) { btn.textContent = "✓ 已存手帐"; btn.disabled = true; }
     toast("已存进手帐 · 标签 #小钻风");
   } catch (_) { toast("存手帐失败"); }
@@ -95,6 +96,7 @@ function memoText(a) {
     case "term": return `【小钻风术语】${p || q}\n${ans}`;
     case "ask": return `【小钻风问答】${p}\n${ans}`;
     case "translate": return `【小钻风译文】${q}\n— ${p}`;
+    case "task": return `【小钻风任务】${p}\n— 原文：“${q}”`;
     default: return `【小钻风】“${q}”\n${p || ans}`;
   }
 }
@@ -120,8 +122,23 @@ async function uploadFile(f) {
     state.decks = decks;
     toast("已上传导读 · " + res.date);
     loadDeck(res.date);
-    autoExtract(res.date);   // 顺手抽取收录：公司/观点/动态进演变追踪 + 学习
+    await autoExtract(res.date);    // 抽取收录：公司/观点/动态进演变追踪 + 学习
+    autoDetectTasks(res.date);      // 再扫一遍评论里的行动任务并高亮
   } catch (err) { setStatus("上传失败"); alert("上传失败：" + err.message); }
+}
+
+// scan the day's commentary for action-tasks (CC) and highlight them in the deck.
+async function autoDetectTasks(date) {
+  setStatus("正在找评论里的任务…（CC）");
+  const res = await ccPost("/api/reader/detect_tasks", { date }, () => setStatus("CC 排队中，待找任务…"));
+  setStatus("");
+  if (!res || res.error) { if (res && res.error) toast("找任务失败：" + res.error); return; }
+  await refreshGraph();
+  if (state.date === date) {
+    (res.newTasks || []).forEach((a) => highlight(a));   // highlight just the new ones (avoid re-wrapping)
+    renderAnnoList();
+  }
+  if (res.added) toast(`发现 ${res.added} 个任务，已高亮 📌`);
 }
 
 // drag a .html anywhere onto the page to upload it (same flow as the button).
@@ -665,7 +682,7 @@ function renderAnnoList() {
   const list = (state.graph.annotations || []).filter((a) => a.date === state.date)
     .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   $("#anno-count").textContent = list.length;
-  const KIND = { note: "笔记", tag: "标签", term: "术语", ask: "问CC", translate: "翻译" };
+  const KIND = { note: "笔记", tag: "标签", term: "术语", ask: "问CC", translate: "翻译", task: "📌 任务" };
   const wrap = $("#anno-list");
   wrap.innerHTML = "";
   if (!list.length) { wrap.innerHTML = `<p class="hint">这天还没有标注。</p>`; return; }
@@ -685,7 +702,7 @@ function renderAnnoList() {
         (a.payload ? `<p class="p">${escapeHtml(a.payload)}</p>` : "") +
         (a.answer ? `<p class="p ans">${escapeHtml(a.answer.slice(0, 160))}${a.answer.length > 160 ? "…" : ""}</p>` : "") +
         `<div class="row"><button class="memo">存手帐</button><button class="danger">删除</button></div>`;
-      body.querySelector(".memo").onclick = (e) => toMemo(memoText(a), e.target);
+      body.querySelector(".memo").onclick = (e) => toMemo(memoText(a), e.target, a.kind === "task" ? ["小钻风", "任务"] : ["小钻风"]);
       body.querySelector(".danger").onclick = () => { if (confirm("删除这条标注？")) removeAnno(a, item); };
     }
     wrap.appendChild(item);

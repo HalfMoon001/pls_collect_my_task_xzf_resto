@@ -243,6 +243,49 @@ function mountReader(app, opts) {
     return G.mergeGraph(obj);
   }));
 
+  // Detect action-tasks hidden in the day's commentary (Yibo's take / Claude's read
+  // / body) and persist them as kind="task" annotations so the reader highlights them.
+  // slide_index is resolved server-side (find the slide whose text contains the quote)
+  // so anchoring doesn't depend on CC getting the index right — and a paraphrased
+  // (non-verbatim) quote that no slide contains is dropped.
+  app.post('/api/reader/detect_tasks', (req, res) => ccGuard(res, async () => {
+    const date = req.body.date || '';
+    const p = deckPath(date);
+    if (!p) return { error: `no deck for ${date}` };
+    const raw = fs.readFileSync(p, 'utf-8');
+    const slides = parseDeck.slideTexts(raw);
+    const blob = slides.map((s) => `[slide ${s.slide_index}]\n${s.text}`).join('\n\n');
+    const prompt =
+      `这是 ${date} 的「小钻风」AI 动态导读。评论（Yibo's take / Claude's read / 正文）里有时会冒出**行动任务**——` +
+      `读者(Yibo)可以去做的具体动作：该试某工具、该构建/研究某东西、待办、TODO、“应该…/可以…/试试…/得去…”。\n` +
+      `请找出真实出现的任务，逐条给出**逐字原文引用**(quote，必须是导读里一字不差的连续片段，用于定位)和一句**中文任务描述**(task)。` +
+      `只算真正可执行的动作，别把普通观点/评论当任务。没有就返回空数组。\n` +
+      `只输出 JSON：{ "tasks": [ {"quote": "原文片段", "task": "一句话任务"} ] }\n\n导读全文：\n` + blob;
+    const obj = extractJSON(await callClaude(prompt, '检测任务'));
+    const tasks = Array.isArray(obj) ? obj : (obj.tasks || []);
+    const norm = (s) => (s || '').replace(/\s+/g, ' ').trim();
+    const findSlide = (q) => { const nq = norm(q); for (const s of slides) if (norm(s.text).includes(nq)) return s.slide_index; return -1; };
+    const existing = new Set(G.load('annotations').filter((a) => a.date === date && a.kind === 'task').map((a) => (a.anchor && a.anchor.quote) || ''));
+    const newTasks = [];
+    for (const t of tasks) {
+      const quote = (t.quote || '').trim();
+      if (!quote || existing.has(quote)) continue;
+      const si = findSlide(quote);
+      if (si < 0) continue;                       // quote not verbatim in any slide → can't anchor, skip
+      const anno = {
+        id: 'a_task_' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
+        created_at: new Date().toISOString(), date,
+        post_id: null, slide_index: si,
+        anchor: { quote, prefix: '', suffix: '', slide_index: si },
+        kind: 'task', payload: (t.task || '').trim(), answer: '', auto: true, linked_entities: [],
+      };
+      G.annotate({ annotation: anno });
+      existing.add(quote);
+      newTasks.push(anno);
+    }
+    return { status: 'ok', added: newTasks.length, total: tasks.length, newTasks };
+  }));
+
   app.post('/api/reader/annotate', (req, res) => {
     try { res.json(G.annotate(req.body)); }
     catch (e) { res.status(500).json({ error: String(e.message || e) }); }
