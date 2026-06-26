@@ -62,21 +62,43 @@ function toast(msg) {
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800);
 }
 
+// ignore list (companies the user doesn't want to see) — persisted per-browser
+const IGNORE_KEY = "xzf-track-ignored";
+const loadIgnored = () => { try { return new Set(JSON.parse(localStorage.getItem(IGNORE_KEY) || "[]")); } catch { return new Set(); } };
+const saveIgnored = (set) => localStorage.setItem(IGNORE_KEY, JSON.stringify([...set]));
+function ignoreCompany(id) { const s = loadIgnored(); s.add(id); saveIgnored(s); buildTimeline(); }
+function unignoreCompany(id) { const s = loadIgnored(); s.delete(id); saveIgnored(s); buildTimeline(); }
+
 function buildTimeline() {
-  // only companies; rank by trackable activity (posts mentioning + opinions about)
   const activity = (e) =>
     G.posts.filter((p) => (e.mentions || []).includes(p.id) || (p.mentions || []).includes(e.id)).length +
     G.opinions.filter((o) => (o.about || []).includes(e.id)).length;
-  const ents = G.entities.filter(isCompany).map((e) => ({ e, n: activity(e) })).sort((a, b) => b.n - a.n);
-  if (!ents.length) { $("#timeline-view").innerHTML = `<p class="hint">还没有可追踪的公司。读几篇导读、抽取入图谱后再来。</p>`; return; }
+  const ignored = loadIgnored();
+  const allComps = G.entities.filter(isCompany);
+  const ents = allComps.filter((e) => !ignored.has(e.id)).map((e) => ({ e, n: activity(e) })).sort((a, b) => b.n - a.n);
+  const ignoredComps = allComps.filter((e) => ignored.has(e.id));
+
+  if (!allComps.length) { $("#timeline-view").innerHTML = `<p class="hint">还没有可追踪的公司。读几篇导读、抽取入图谱后再来。</p>`; return; }
+
   const opts = ents.map(({ e, n }) => `<option value="${e.id}">${e.canonical_name} (${n})</option>`).join("");
   $("#timeline-view").innerHTML =
-    `<div class="track-bar">追踪公司：<select id="track-entity">${opts}</select>
+    `<div class="track-bar">追踪公司：<select id="track-entity"${ents.length ? "" : " disabled"}>${opts || `<option>（全部已忽略）</option>`}</select>
+       ${ignoredComps.length ? `<button id="ignored-toggle" class="linkbtn">已忽略 ${ignoredComps.length} ▾</button>` : ""}
        <span class="track-hint">看这家公司跨天怎么被提及、Yibo／Claude 的立场怎么变。</span></div>
+     <div id="ignored-panel" hidden></div>
      <div id="track-body"></div>`;
+
+  if (ignoredComps.length) {
+    $("#ignored-toggle").onclick = () => { const p = $("#ignored-panel"); p.hidden = !p.hidden; };
+    $("#ignored-panel").innerHTML =
+      `<div class="ignored-list">已忽略（点加回）：${ignoredComps.map((e) => `<span class="chip ignored" data-add="${e.id}">${e.canonical_name} <b>+ 加回</b></span>`).join("")}</div>`;
+    $("#ignored-panel").querySelectorAll("[data-add]").forEach((c) => (c.onclick = () => unignoreCompany(c.dataset.add)));
+  }
+
+  if (!ents.length) { $("#track-body").innerHTML = `<p class="hint">公司都被你忽略了。点上面「已忽略」把想看的加回来。</p>`; return; }
   const sel = $("#track-entity");
   sel.onchange = () => renderTrack(sel.value);
-  renderTrack(ents[0].e.id);   // default: most-active company
+  renderTrack(ents[0].e.id);   // default: most-active visible company
 }
 
 function renderTrack(id) {
@@ -90,13 +112,14 @@ function renderTrack(id) {
   opins.forEach((o) => bucket(o.date).ops.push(o));
   const dates = Object.keys(byDate).sort();   // oldest → newest, read the evolution forward
 
-  // related — only other companies, so clicking a chip always lands on a tracked entity
+  // related — only other (non-ignored) companies, so a chip always lands on a tracked one
+  const ignored = loadIgnored();
   const rels = G.relations.filter((r) => r.src === e.id || r.dst === e.id);
   const seen = new Set();
   const relChips = rels.map((r) => {
     const other = r.src === e.id ? r.dst : r.src;
     const oe = G.entities.find((x) => x.id === other);
-    if (!isCompany(oe) || seen.has(other)) return "";
+    if (!isCompany(oe) || ignored.has(other) || seen.has(other)) return "";
     seen.add(other);
     const thread = r.type === "same_thread_as";
     return `<span class="chip${thread ? " thread" : ""}" data-ent="${other}">${thread ? "🔗 " : ""}${oe.canonical_name}</span>`;
@@ -113,12 +136,14 @@ function renderTrack(id) {
 
   $("#track-body").innerHTML =
     `<div class="track-head">
+       <button class="ignore-btn" title="不再在列表里显示这家公司">🙈 忽略这家</button>
        <div class="type">company${e.aliases && e.aliases.length ? ` · aka ${e.aliases.join(", ")}` : ""}</div>
        <h3>${e.canonical_name}</h3>
        ${e.description ? `<p>${e.description}</p>` : ""}
        <div class="track-meta">提及 ${mentioned.length} 篇 · 观点 ${opins.length} 条 · ${span}</div>
        ${relChips ? `<div class="track-rels"><b>关联公司</b> ${relChips}</div>` : ""}
      </div>${dayHtml}`;
+  $("#track-body .ignore-btn").onclick = () => ignoreCompany(e.id);
   $("#track-body").querySelectorAll(".chip[data-ent]").forEach((c) => (c.onclick = () => {
     const t = c.dataset.ent;
     if (G.entities.some((x) => x.id === t)) { $("#track-entity").value = t; renderTrack(t); }
