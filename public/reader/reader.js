@@ -57,7 +57,6 @@ async function boot() {
   const { decks } = await api.get("/api/reader/decks");
   state.decks = decks;
   bindDatepicker();
-  $("#btn-extract").onclick = extractCurrent;
   $("#btn-upload").onclick = () => $("#file-deck").click();
   $("#file-deck").onchange = uploadDeck;
   document.querySelectorAll(".tab").forEach((t) => (t.onclick = () => switchTab(t.dataset.tab)));
@@ -116,10 +115,23 @@ async function uploadDeck(e) {
     if (res.error) { setStatus("上传失败"); alert("上传失败：" + res.error); return; }
     const { decks } = await api.get("/api/reader/decks");
     state.decks = decks;
-    setStatus("已上传 " + res.date);
     toast("已上传导读 · " + res.date);
     loadDeck(res.date);
+    autoExtract(res.date);   // 顺手抽取收录：公司/观点/动态进演变追踪 + 学习
   } catch (err) { setStatus("上传失败"); alert("上传失败：" + err.message); }
+}
+
+// Ingest a deck into the store (companies / opinions / posts / relations) via CC,
+// so 演变追踪 and 学习 pick it up. Runs in the background after upload — the user
+// can read while CC works. Idempotent (server guards against re-extracting a date).
+async function autoExtract(date) {
+  setStatus("正在抽取收录…（CC，约十几秒）");
+  const res = await ccPost("/api/reader/extract", { date }, () => setStatus("CC 排队中，待抽取收录…"));
+  if (!res || res.error) { setStatus(""); toast("抽取失败：" + ((res && res.error) || "无响应") + "（重新上传可重试）"); return; }
+  if (res.status === "already_extracted") { setStatus(""); toast("这篇已收录过"); return; }
+  await refreshGraph();
+  setStatus("");
+  toast(`已收录 · 新增 ${res.added?.entities || 0} 实体 / ${res.added?.opinions || 0} 观点，已进演变追踪`);
 }
 
 // translation model status → if local model unavailable, offer a one-click pull
@@ -680,17 +692,6 @@ function focusAnno(id) {
 function switchTab(name) {
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
   document.querySelectorAll(".tabpane").forEach((p) => p.classList.toggle("active", p.id === name));
-}
-
-async function extractCurrent() {
-  if (!confirm(`用 CC 抽取 ${state.date} 这篇导读到知识图谱？（会调用 claude，稍等十几秒）`)) return;
-  setStatus("抽取中…"); $("#btn-extract").disabled = true;
-  const res = await ccPost("/api/reader/extract", { date: state.date }, () => setStatus("CC 排队中，等待抽取…"));
-  $("#btn-extract").disabled = false;
-  if (!res || res.error) { setStatus("失败"); alert("抽取失败：" + ((res && res.error) || "无响应")); return; }
-  if (res.status === "already_extracted") { setStatus("已在图谱"); alert("这篇已经在图谱里了。"); return; }
-  await refreshGraph();
-  setStatus("已入图谱"); alert(`已并入图谱：新增 posts ${res.added?.posts||0} / 实体 ${res.added?.entities||0} / 观点 ${res.added?.opinions||0} / 关系 ${res.added?.relations||0}`);
 }
 
 boot();
