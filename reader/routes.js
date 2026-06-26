@@ -264,12 +264,16 @@ function mountReader(app, opts) {
     const obj = extractJSON(await callClaude(prompt, '检测任务'));
     const tasks = Array.isArray(obj) ? obj : (obj.tasks || []);
     const norm = (s) => (s || '').replace(/\s+/g, ' ').trim();
+    const canon = (s) => norm(s).toLowerCase().replace(/[.,!?;:'"“”‘’]/g, '');   // fuzzy key: CC varies quote boundaries/punctuation run-to-run
     const findSlide = (q) => { const nq = norm(q); for (const s of slides) if (norm(s.text).includes(nq)) return s.slide_index; return -1; };
-    const existing = new Set(G.load('annotations').filter((a) => a.date === date && a.kind === 'task').map((a) => (a.anchor && a.anchor.quote) || ''));
+    const seen = G.load('annotations').filter((a) => a.date === date && a.kind === 'task')
+      .map((a) => canon((a.anchor && a.anchor.quote) || '')).filter(Boolean);
+    const isDupe = (cq) => seen.some((e) => e.includes(cq) || cq.includes(e));   // either-direction containment catches sub/super-span re-detections
     const newTasks = [];
     for (const t of tasks) {
       const quote = (t.quote || '').trim();
-      if (!quote || existing.has(quote)) continue;
+      const cq = canon(quote);
+      if (!cq || isDupe(cq)) continue;
       const si = findSlide(quote);
       if (si < 0) continue;                       // quote not verbatim in any slide → can't anchor, skip
       const anno = {
@@ -280,7 +284,7 @@ function mountReader(app, opts) {
         kind: 'task', payload: (t.task || '').trim(), answer: '', auto: true, linked_entities: [],
       };
       G.annotate({ annotation: anno });
-      existing.add(quote);
+      seen.push(cq);
       newTasks.push(anno);
     }
     return { status: 'ok', added: newTasks.length, total: tasks.length, newTasks };
