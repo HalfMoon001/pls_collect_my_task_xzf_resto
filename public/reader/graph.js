@@ -4,7 +4,7 @@ const api = {
   get: (u) => fetch(u).then((r) => r.json()),
   post: (u, b) => fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }).then((r) => r.json()),
 };
-let G = null, cy = null;
+let G = null, cy = null, OPBYENT = {};
 if (window.cytoscapeFcose) cytoscape.use(window.cytoscapeFcose);
 // Layout cost scales with graph size: small graphs get the high-quality solver;
 // as the graph grows across days, trade a little layout quality for responsiveness
@@ -43,8 +43,8 @@ async function boot() {
 
 // ----------------------------------------------------------------- entity net
 function buildCy() {
-  const opByEntity = {};
-  G.opinions.forEach((o) => (o.about || []).forEach((e) => (opByEntity[e] = opByEntity[e] || []).push(o)));
+  OPBYENT = {};
+  G.opinions.forEach((o) => (o.about || []).forEach((e) => (OPBYENT[e] = OPBYENT[e] || []).push(o)));
   const nodes = G.entities.map((e) => ({
     data: { id: e.id, label: e.canonical_name, type: e.type, deg: e.mentions ? e.mentions.length : 1, e },
   }));
@@ -64,12 +64,41 @@ function buildCy() {
     layout: layoutFor(nodes.length),
     wheelSensitivity: 0.25,
   });
-  cy.on("tap", "node", (evt) => showEntity(evt.target.data("e"), opByEntity));
+  cy.on("tap", "node", (evt) => showEntity(evt.target.data("e")));
   cy.on("tap", (evt) => { if (evt.target === cy) { cy.elements().removeClass("faded hi"); } });
 }
 const nodeExists = (id) => G.entities.some((e) => e.id === id);
 
-function showEntity(e, opByEntity) {
+// Re-fetch the graph and rebuild every view (after a delete). Optionally re-open
+// an entity's detail panel if it still exists.
+async function reloadGraph(reopenEntityId) {
+  G = await api.get("/api/reader/graph");
+  if (cy) { try { cy.destroy(); } catch (_) {} cy = null; }
+  buildTypeFilters();
+  buildCy();
+  buildTimeline();
+  buildOpinions();
+  const e = reopenEntityId && G.entities.find((x) => x.id === reopenEntityId);
+  if (e) showEntity(e); else $("#detail").innerHTML = `<p class="hint">点节点看详情。</p>`;
+}
+
+async function deleteEntity(id, name) {
+  const rels = G.relations.filter((r) => r.src === id || r.dst === id).length;
+  if (!confirm(`删除实体「${name}」？\n会一并删掉它的 ${rels} 条关系，并从出处/观点引用里移除。不可撤销。`)) return;
+  const res = await api.post("/api/reader/graph/delete", { entity: id });
+  if (res && res.error) { alert("删除失败：" + res.error); return; }
+  await reloadGraph();
+}
+
+async function deleteRelation(id, entityId) {
+  if (!confirm("删除这条关系？不可撤销。")) return;
+  const res = await api.post("/api/reader/graph/delete", { relation: id });
+  if (res && res.error) { alert("删除失败：" + res.error); return; }
+  await reloadGraph(entityId);   // entity still exists → re-open its panel
+}
+
+function showEntity(e) {
+  const opByEntity = OPBYENT;
   cy.elements().removeClass("faded hi");
   const node = cy.$id(e.id);
   const neighborhood = node.closedNeighborhood();
@@ -80,7 +109,7 @@ function showEntity(e, opByEntity) {
     const other = r.src === e.id ? r.dst : r.src;
     const dir = r.src === e.id ? `—${r.type}→` : `←${r.type}—`;
     const oe = G.entities.find((x) => x.id === other);
-    return `<div>${dir} <span class="chip" data-ent="${other}">${oe ? oe.canonical_name : other}</span>${r.type === "same_thread_as" ? " 🔗跨天" : ""}</div>`;
+    return `<div class="rel-row">${dir} <span class="chip" data-ent="${other}">${oe ? oe.canonical_name : other}</span>${r.type === "same_thread_as" ? " 🔗跨天" : ""}<button class="rel-del" data-rel="${r.id}" title="删除这条关系">✕</button></div>`;
   }).join("");
   const posts = (e.mentions || []).map((pid) => G.posts.find((p) => p.id === pid)).filter(Boolean);
   const postHtml = posts.map((p) => `<div class="chip" title="${p.date}">${p.date} · ${p.headline.slice(0, 40)}</div>`).join("");
@@ -92,10 +121,13 @@ function showEntity(e, opByEntity) {
     <p>${e.description || ""}</p>
     ${relHtml ? `<div class="sec"><b>关系 (${rels.length})</b>${relHtml}</div>` : ""}
     ${postHtml ? `<div class="sec"><b>出处 · ${posts.length} 篇</b><br>${postHtml}</div>` : ""}
-    ${opHtml ? `<div class="sec"><b>相关观点 (${ops.length})</b>${opHtml}</div>` : ""}`;
+    ${opHtml ? `<div class="sec"><b>相关观点 (${ops.length})</b>${opHtml}</div>` : ""}
+    <div class="sec"><button class="ent-del" data-ent="${e.id}">🗑 删除此实体</button></div>`;
   $("#detail").querySelectorAll(".chip[data-ent]").forEach((c) => (c.onclick = () => {
-    const t = G.entities.find((x) => x.id === c.dataset.ent); if (t) { showEntity(t, opByEntity); cy.center(cy.$id(t.id)); }
+    const t = G.entities.find((x) => x.id === c.dataset.ent); if (t) { showEntity(t); cy.center(cy.$id(t.id)); }
   }));
+  $("#detail").querySelectorAll(".rel-del").forEach((b) => (b.onclick = (ev) => { ev.stopPropagation(); deleteRelation(b.dataset.rel, e.id); }));
+  $("#detail").querySelector(".ent-del").onclick = () => deleteEntity(e.id, e.canonical_name);
 }
 
 function searchFocus(q) {

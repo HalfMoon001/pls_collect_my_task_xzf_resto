@@ -248,6 +248,15 @@ function mountReader(app, opts) {
     catch (e) { res.status(500).json({ error: String(e.message || e) }); }
   });
 
+  // Delete a graph entity (cascades to its relations + mention refs) or a relation.
+  app.post('/api/reader/graph/delete', (req, res) => {
+    try {
+      if (req.body.entity) return res.json(G.deleteEntity(req.body.entity));
+      if (req.body.relation) return res.json(G.deleteRelation(req.body.relation));
+      res.status(400).json({ error: 'need entity or relation id' });
+    } catch (e) { res.status(500).json({ error: String(e.message || e) }); }
+  });
+
   console.log(`[Reader] 小钻风 mounted at /reader  (decks: ${listDecks().map((d) => d.date).join(', ') || 'none'})`);
 
   // Auto-enable local translation: if Ollama is installed, start `ollama serve`,

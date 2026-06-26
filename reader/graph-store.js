@@ -123,7 +123,42 @@ function makeGraphStore(graphDir, annoLogDir) {
     return { status: 'saved', id: anno.id };
   }
 
-  return { load, save, blob, mergeGraph, defineUpsert, annotate, slug, graphDir };
+  // Delete a relation by id.
+  function deleteRelation(id) {
+    const rels = load('relations');
+    const next = rels.filter((r) => r.id !== id);
+    save('relations', next);
+    return { status: 'deleted', id, removed: rels.length - next.length };
+  }
+
+  // Delete an entity and cascade: drop relations touching it, and scrub its id
+  // from posts.mentions / opinions.about / annotations.linked_entities.
+  function deleteEntity(id) {
+    const ents = load('entities');
+    const nextEnts = ents.filter((e) => e.id !== id);
+    if (nextEnts.length === ents.length) return { status: 'not_found', id };
+    save('entities', nextEnts);
+
+    const rels = load('relations');
+    const nextRels = rels.filter((r) => r.src !== id && r.dst !== id);
+    save('relations', nextRels);
+
+    const scrub = (key, field) => {
+      const rows = load(key); let n = 0;
+      for (const r of rows) if (Array.isArray(r[field]) && r[field].includes(id)) { r[field] = r[field].filter((x) => x !== id); n++; }
+      if (n) save(key, rows);
+      return n;
+    };
+    return {
+      status: 'deleted', id,
+      removed_relations: rels.length - nextRels.length,
+      posts_scrubbed: scrub('posts', 'mentions'),
+      opinions_scrubbed: scrub('opinions', 'about'),
+      annotations_scrubbed: scrub('annotations', 'linked_entities'),
+    };
+  }
+
+  return { load, save, blob, mergeGraph, defineUpsert, annotate, deleteEntity, deleteRelation, slug, graphDir };
 }
 
 module.exports = { makeGraphStore, slug };

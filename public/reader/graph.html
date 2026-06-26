@@ -35,6 +35,12 @@ aside p{font-size:14px;line-height:1.6;}
 aside .sec{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
 aside .sec b{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;}
 aside .chip{display:inline-block;background:#eef2f7;border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin:3px 3px 0 0;font-size:12px;cursor:pointer;}
+aside .rel-row{display:flex;align-items:center;gap:5px;font-size:13px;margin-top:4px;}
+aside .rel-row .rel-del{margin-left:auto;border:1px solid var(--line);background:#fff;color:var(--mute);border-radius:5px;width:18px;height:18px;line-height:1;padding:0;font-size:11px;cursor:pointer;opacity:0;transition:opacity .15s;}
+aside .rel-row:hover .rel-del{opacity:1;}
+aside .rel-row .rel-del:hover{background:var(--vermilion);color:#fff;border-color:var(--vermilion);}
+aside .ent-del{border:1px solid var(--vermilion);background:#fff;color:var(--vermilion);border-radius:7px;padding:5px 11px;font:inherit;font-size:13px;cursor:pointer;}
+aside .ent-del:hover{background:var(--vermilion);color:#fff;}
 aside .op{background:#fff;border:1px solid var(--line);border-left:3px solid var(--denim);border-radius:8px;padding:8px;margin-top:7px;font-size:13px;}
 aside .op.yibo{border-left-color:var(--vermilion);} aside .op.claude{border-left-color:#8d7bbd;}
 aside .op .h{font-size:11px;color:var(--mute);font-family:"IBM Plex Mono",monospace;}
