@@ -11,7 +11,8 @@ body{display:flex;flex-direction:column;background:#ece8e0;}
 header{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--navy);color:#fff;flex:0 0 auto;flex-wrap:wrap;}
 header .brand{font-weight:700;font-family:"IBM Plex Mono",monospace;}
 header a{color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.3);padding:5px 10px;border-radius:7px;}
-main{flex:1;min-height:0;overflow:auto;padding:22px;}
+main{flex:1;display:flex;min-height:0;}
+#content{flex:1;overflow:auto;padding:22px;}
 .hint{color:var(--mute);font-size:13px;}
 /* day blocks */
 .tl-day{margin-bottom:26px;}
@@ -34,6 +35,22 @@ main{flex:1;min-height:0;overflow:auto;padding:22px;}
 .track-head .track-rels{margin-top:8px;font-size:12px;}
 .track-head .track-rels .chip{display:inline-block;background:#eef2f7;border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin:3px 3px 0 0;font-size:12px;cursor:pointer;}
 .track-head .track-rels .chip.thread{background:#fbeae0;border-color:var(--vermilion);color:var(--vermilion);}
+/* 右侧副栏 — 划词翻译 */
+#side{flex:0 0 320px;border-left:1px solid var(--line);background:#fbfaf7;overflow:auto;padding:16px;}
+#side .tx-head{font-weight:700;color:var(--navy);font-size:14px;display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+#side .tx-eng{font-size:11px;color:var(--mute);font-family:"IBM Plex Mono",monospace;font-weight:400;}
+#side .tx-empty{font-size:13px;}
+#side .tx-src{font-size:12px;color:var(--mute);font-style:italic;border-left:2px solid var(--line);padding-left:8px;margin-bottom:8px;white-space:pre-wrap;}
+#side .tx-out{font-size:14px;line-height:1.7;white-space:pre-wrap;}
+#side .tx-out.zh{font-family:"PingFang SC","Microsoft YaHei",sans-serif;}
+#side .tx-row{display:flex;gap:8px;margin-top:12px;}
+#side .tx-row button{font:inherit;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 11px;cursor:pointer;}
+#side .tx-row .tx-memo{background:#E8B84B;color:#4a3a28;border:0;font-weight:600;font-size:12px;}
+#side .tx-row .tx-memo:disabled{opacity:.6;cursor:default;}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;}
+@keyframes sp{to{transform:rotate(360deg);}}
+#xzf-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(12px);background:var(--navy);color:#fff;padding:9px 16px;border-radius:9px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:60;}
+#xzf-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -44,7 +61,14 @@ main{flex:1;min-height:0;overflow:auto;padding:22px;}
   <a href="/reader/learn">学习</a>
 </header>
 <main>
-  <div id="timeline-view"></div>
+  <div id="content"><div id="timeline-view"></div></div>
+  <aside id="side">
+    <div class="tx-head">划词翻译 <span class="tx-eng"></span></div>
+    <div class="tx-empty hint">在左侧选中英文，这里出中文翻译。</div>
+    <div class="tx-src" hidden></div>
+    <div class="tx-out zh"></div>
+    <div class="tx-row" hidden><button class="tx-fine">精翻</button><button class="tx-memo">存进手帐</button></div>
+  </aside>
 </main>
 <script src="/reader/graph.js"></script>
 </body>

@@ -1,13 +1,65 @@
 /* 小钻风 · 演变追踪 — 选一家公司，按日期看它被哪些 post 提及、Yibo/Claude 的立场怎么变。
    （原知识图谱的实体网络/观点/问答视图已移除，只保留这一个视图；只收录 type=company 的实体。） */
 const $ = (s) => document.querySelector(s);
-const api = { get: (u) => fetch(u).then((r) => r.json()) };
+const api = {
+  get: async (u) => { try { return await (await fetch(u)).json(); } catch (e) { return { error: String(e.message || e) }; } },
+  post: async (u, b) => { try { return await (await fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) })).json(); } catch (e) { return { error: String(e.message || e) }; } },
+};
 let G = null;
 const isCompany = (e) => e && e.type === "company";
 
 async function boot() {
   G = await api.get("/api/reader/graph");
   buildTimeline();
+  bindTranslate();
+}
+
+// ----------------------------------------------------------- 划词翻译副栏
+let txToken = 0;
+function bindTranslate() {
+  // translate whatever the user selects in the content column (not the side panel)
+  $("#content").addEventListener("mouseup", () => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) return;
+    const text = sel.toString().trim();
+    if (text.length < 1) return;
+    autoTranslate(text);
+  });
+}
+
+async function autoTranslate(text) {
+  const ENG = { fast: "本地·快", fine: "本地·精", cc: "CC·精翻" };
+  $(".tx-empty").style.display = "none";
+  const src = $(".tx-src"), out = $(".tx-out"), eng = $(".tx-eng"), row = $(".tx-row");
+  src.hidden = false; src.textContent = text;
+  const token = ++txToken;
+  const render = async (mode) => {
+    out.innerHTML = `<span class="spin"></span>`; eng.textContent = "";
+    const res = await api.post("/api/reader/translate", { text, mode });
+    if (token !== txToken) return;   // superseded by a newer selection
+    out.textContent = (res && res.translation) || ("翻译失败：" + ((res && res.error) || "?"));
+    eng.textContent = (ENG[res.engine] || res.engine || "") + (res.engine === "cc" && mode !== "cc" ? "（本地不可用）" : "");
+    row._tx = res && res.translation;
+  };
+  await render("fast");
+  row.hidden = false;
+  $(".tx-fine").onclick = () => render("fine");
+  const memo = $(".tx-memo"); memo.disabled = false; memo.textContent = "存进手帐";
+  memo.onclick = () => toMemo(`【小钻风译文】${text}\n— ${row._tx || ""}`, memo);
+}
+
+async function toMemo(content, btn) {
+  if (!content) return;
+  const res = await api.post("/api/memos", { content, tags: ["小钻风"] });
+  if (res && res.error) { toast("存手帐失败：" + res.error); return; }
+  if (btn) { btn.textContent = "✓ 已存手帐"; btn.disabled = true; }
+  toast("已存进手帐 · 标签 #小钻风");
+}
+function toast(msg) {
+  let t = $("#xzf-toast");
+  if (!t) { t = document.createElement("div"); t.id = "xzf-toast"; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800);
 }
 
 function buildTimeline() {
