@@ -1,185 +1,35 @@
-/* 小钻风 · 知识图谱视图 — 实体网络 / 时间线 / 观点 / 问答 (Cytoscape + vanilla). */
+/* 小钻风 · 演变追踪 — 选一家公司，按日期看它被哪些 post 提及、Yibo/Claude 的立场怎么变。
+   （原知识图谱的实体网络/观点/问答视图已移除，只保留这一个视图；只收录 type=company 的实体。） */
 const $ = (s) => document.querySelector(s);
-const api = {
-  get: (u) => fetch(u).then((r) => r.json()),
-  post: (u, b) => fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }).then((r) => r.json()),
-};
-let G = null, cy = null, OPBYENT = {};
-if (window.cytoscapeFcose) cytoscape.use(window.cytoscapeFcose);
-// Layout cost scales with graph size: small graphs get the high-quality solver;
-// as the graph grows across days, trade a little layout quality for responsiveness
-// so it doesn't freeze the tab.
-function layoutFor(n) {
-  const big = n > 120, huge = n > 300;
-  return {
-    name: window.cytoscapeFcose ? "fcose" : "cose",
-    quality: huge ? "draft" : big ? "default" : "proof",
-    animate: false, randomize: true,
-    nodeDimensionsIncludeLabels: true,   // space nodes by their LABEL box → no overlap
-    idealEdgeLength: 120, nodeSeparation: 110, nodeRepulsion: 9000,
-    gravity: 0.25, gravityRange: 3.0, packComponents: true,
-    numIter: huge ? 1000 : big ? 1500 : 2500,
-    fit: true, padding: 50,              // auto-fit the whole graph into the canvas
-  };
-}
-
-const TYPE_COLOR = {
-  company: "#0F2147", person: "#B5252B", product: "#2f7d4f", paper: "#8d7bbd",
-  concept: "#c98a1a", benchmark: "#3a86a8", framework: "#5b6b8c", tool: "#6b8c5b",
-  source: "#999", project: "#d4682f",
-};
+const api = { get: (u) => fetch(u).then((r) => r.json()) };
+let G = null;
+const isCompany = (e) => e && e.type === "company";
 
 async function boot() {
   G = await api.get("/api/reader/graph");
-  buildTypeFilters();
-  buildCy();
   buildTimeline();
-  buildOpinions();
-  bindTabs();
-  $("#search").oninput = (e) => searchFocus(e.target.value.trim());
-  $("#ask-go").onclick = ask;
-  $("#ask-input").onkeydown = (e) => { if (e.key === "Enter") ask(); };
 }
 
-// ----------------------------------------------------------------- entity net
-function buildCy() {
-  OPBYENT = {};
-  G.opinions.forEach((o) => (o.about || []).forEach((e) => (OPBYENT[e] = OPBYENT[e] || []).push(o)));
-  const nodes = G.entities.map((e) => ({
-    data: { id: e.id, label: e.canonical_name, type: e.type, deg: e.mentions ? e.mentions.length : 1, e },
-  }));
-  const edges = G.relations.filter((r) => nodeExists(r.src) && nodeExists(r.dst)).map((r) => ({
-    data: { id: r.id, source: r.src, target: r.dst, label: r.type, thread: r.type === "same_thread_as", r },
-  }));
-  cy = cytoscape({
-    container: $("#cy"),
-    elements: [...nodes, ...edges],
-    style: [
-      { selector: "node", style: { "background-color": (n) => TYPE_COLOR[n.data("type")] || "#666", label: "data(label)", "font-size": 11, color: "#222", "text-wrap": "wrap", "text-max-width": 110, "text-valign": "bottom", "text-margin-y": 3, width: (n) => 16 + 4 * Math.min(8, n.data("deg")), height: (n) => 16 + 4 * Math.min(8, n.data("deg")) } },
-      { selector: "edge", style: { width: 1.3, "line-color": "#bbb", "target-arrow-color": "#bbb", "target-arrow-shape": "triangle", "arrow-scale": 0.8, "curve-style": "bezier", label: "data(label)", "font-size": 8, color: "#999", "text-rotation": "autorotate", "text-background-color": "#f3f0e9", "text-background-opacity": 1, "text-background-padding": 1 } },
-      { selector: "edge[?thread]", style: { "line-color": "#B5252B", "line-style": "dashed", "target-arrow-color": "#B5252B", width: 2, color: "#B5252B" } },
-      { selector: ".faded", style: { opacity: 0.12 } },
-      { selector: ".hi", style: { "border-width": 3, "border-color": "#B5252B" } },
-    ],
-    layout: layoutFor(nodes.length),
-    wheelSensitivity: 0.25,
-  });
-  cy.on("tap", "node", (evt) => showEntity(evt.target.data("e")));
-  cy.on("tap", (evt) => { if (evt.target === cy) { cy.elements().removeClass("faded hi"); } });
-}
-const nodeExists = (id) => G.entities.some((e) => e.id === id);
-
-// Re-fetch the graph and rebuild every view (after a delete). Optionally re-open
-// an entity's detail panel if it still exists.
-async function reloadGraph(reopenEntityId) {
-  G = await api.get("/api/reader/graph");
-  if (cy) { try { cy.destroy(); } catch (_) {} cy = null; }
-  buildTypeFilters();
-  buildCy();
-  buildTimeline();
-  buildOpinions();
-  const e = reopenEntityId && G.entities.find((x) => x.id === reopenEntityId);
-  if (e) showEntity(e); else $("#detail").innerHTML = `<p class="hint">点节点看详情。</p>`;
-}
-
-async function deleteEntity(id, name) {
-  const rels = G.relations.filter((r) => r.src === id || r.dst === id).length;
-  if (!confirm(`删除实体「${name}」？\n会一并删掉它的 ${rels} 条关系，并从出处/观点引用里移除。不可撤销。`)) return;
-  const res = await api.post("/api/reader/graph/delete", { entity: id });
-  if (res && res.error) { alert("删除失败：" + res.error); return; }
-  await reloadGraph();
-}
-
-async function deleteRelation(id, entityId) {
-  if (!confirm("删除这条关系？不可撤销。")) return;
-  const res = await api.post("/api/reader/graph/delete", { relation: id });
-  if (res && res.error) { alert("删除失败：" + res.error); return; }
-  await reloadGraph(entityId);   // entity still exists → re-open its panel
-}
-
-function showEntity(e) {
-  const opByEntity = OPBYENT;
-  cy.elements().removeClass("faded hi");
-  const node = cy.$id(e.id);
-  const neighborhood = node.closedNeighborhood();
-  cy.elements().not(neighborhood).addClass("faded");
-  node.addClass("hi");
-  const rels = G.relations.filter((r) => r.src === e.id || r.dst === e.id);
-  const relHtml = rels.map((r) => {
-    const other = r.src === e.id ? r.dst : r.src;
-    const dir = r.src === e.id ? `—${r.type}→` : `←${r.type}—`;
-    const oe = G.entities.find((x) => x.id === other);
-    return `<div class="rel-row">${dir} <span class="chip" data-ent="${other}">${oe ? oe.canonical_name : other}</span>${r.type === "same_thread_as" ? " 🔗跨天" : ""}<button class="rel-del" data-rel="${r.id}" title="删除这条关系">✕</button></div>`;
-  }).join("");
-  const posts = (e.mentions || []).map((pid) => G.posts.find((p) => p.id === pid)).filter(Boolean);
-  const postHtml = posts.map((p) => `<div class="chip" title="${p.date}">${p.date} · ${p.headline.slice(0, 40)}</div>`).join("");
-  const ops = opByEntity[e.id] || [];
-  const opHtml = ops.map((o) => `<div class="op ${o.holder}"><span class="h">${o.label} · ${o.date}</span><br>${o.text}</div>`).join("");
-  $("#detail").innerHTML = `
-    <div class="type">${e.type}</div><h3>${e.canonical_name}</h3>
-    ${e.aliases && e.aliases.length ? `<div class="type">aka ${e.aliases.join(", ")}</div>` : ""}
-    <p>${e.description || ""}</p>
-    ${relHtml ? `<div class="sec"><b>关系 (${rels.length})</b>${relHtml}</div>` : ""}
-    ${postHtml ? `<div class="sec"><b>出处 · ${posts.length} 篇</b><br>${postHtml}</div>` : ""}
-    ${opHtml ? `<div class="sec"><b>相关观点 (${ops.length})</b>${opHtml}</div>` : ""}
-    <div class="sec"><button class="ent-del" data-ent="${e.id}">🗑 删除此实体</button></div>`;
-  $("#detail").querySelectorAll(".chip[data-ent]").forEach((c) => (c.onclick = () => {
-    const t = G.entities.find((x) => x.id === c.dataset.ent); if (t) { showEntity(t); cy.center(cy.$id(t.id)); }
-  }));
-  $("#detail").querySelectorAll(".rel-del").forEach((b) => (b.onclick = (ev) => { ev.stopPropagation(); deleteRelation(b.dataset.rel, e.id); }));
-  $("#detail").querySelector(".ent-del").onclick = () => deleteEntity(e.id, e.canonical_name);
-}
-
-function searchFocus(q) {
-  if (!q) { cy.elements().removeClass("faded hi"); return; }
-  const m = cy.nodes().filter((n) => n.data("label").toLowerCase().includes(q.toLowerCase()));
-  cy.elements().addClass("faded"); m.removeClass("faded").addClass("hi"); m.connectedEdges().removeClass("faded");
-  if (m.length) cy.animate({ fit: { eles: m, padding: 80 } }, { duration: 300 });
-}
-
-function buildTypeFilters() {
-  const types = [...new Set(G.entities.map((e) => e.type))];
-  const applyFilter = () => {
-    const on = new Set([...$("#type-filters").querySelectorAll("input[data-t]:checked")].map((x) => x.dataset.t));
-    cy.nodes().forEach((n) => n.style("display", on.has(n.data("type")) ? "element" : "none"));
-    const all = $("#type-all");
-    if (all) all.checked = on.size === types.length;   // keep 全选 in sync with individual toggles
-  };
-  $("#type-filters").innerHTML =
-    `<label class="all-row"><input type="checkbox" id="type-all" checked>全选</label>` +
-    types.map((t) => `<label><input type="checkbox" checked data-t="${t}"><span style="color:${TYPE_COLOR[t]||'#fff'}">●</span>${t}</label>`).join("");
-  $("#type-filters").querySelectorAll("input[data-t]").forEach((cb) => (cb.onchange = applyFilter));
-  $("#type-all").onchange = (e) => {
-    $("#type-filters").querySelectorAll("input[data-t]").forEach((cb) => (cb.checked = e.target.checked));
-    applyFilter();
-  };
-}
-
-// ------------------------------------------------------- entity tracker（演变追踪）
-// Pick one entity → see, chronologically, every day it was mentioned: the posts
-// that touched it and how Yibo/Claude's stance on it evolved. Uses the graph's
-// mentions / opinions.about / same_thread_as so it shows EVOLUTION, not a flat dump.
 function buildTimeline() {
-  // rank by *trackable* activity (posts mentioning + opinions about), not the raw
-  // mentions array — so the default pick and the counts reflect what you'll see.
+  // only companies; rank by trackable activity (posts mentioning + opinions about)
   const activity = (e) =>
     G.posts.filter((p) => (e.mentions || []).includes(p.id) || (p.mentions || []).includes(e.id)).length +
     G.opinions.filter((o) => (o.about || []).includes(e.id)).length;
-  const ents = G.entities.map((e) => ({ e, n: activity(e) })).sort((a, b) => b.n - a.n);
-  const opts = ents.map(({ e, n }) => `<option value="${e.id}">${e.canonical_name} · ${e.type} (${n})</option>`).join("");
+  const ents = G.entities.filter(isCompany).map((e) => ({ e, n: activity(e) })).sort((a, b) => b.n - a.n);
+  if (!ents.length) { $("#timeline-view").innerHTML = `<p class="hint">还没有可追踪的公司。读几篇导读、抽取入图谱后再来。</p>`; return; }
+  const opts = ents.map(({ e, n }) => `<option value="${e.id}">${e.canonical_name} (${n})</option>`).join("");
   $("#timeline-view").innerHTML =
-    `<div class="track-bar">追踪：<select id="track-entity">${opts}</select>
-       <span class="track-hint">选一个公司／人／主题，看它跨天怎么被提及、立场怎么变。</span></div>
+    `<div class="track-bar">追踪公司：<select id="track-entity">${opts}</select>
+       <span class="track-hint">看这家公司跨天怎么被提及、Yibo／Claude 的立场怎么变。</span></div>
      <div id="track-body"></div>`;
-  if (!ents.length) { $("#track-body").innerHTML = `<p class="hint">图谱里还没有实体。</p>`; return; }
   const sel = $("#track-entity");
   sel.onchange = () => renderTrack(sel.value);
-  renderTrack(ents[0].e.id);   // default: most-active entity
+  renderTrack(ents[0].e.id);   // default: most-active company
 }
 
 function renderTrack(id) {
   const e = G.entities.find((x) => x.id === id);
-  if (!e) { $("#track-body").innerHTML = `<p class="hint">没有这个实体了。</p>`; return; }
+  if (!e) { $("#track-body").innerHTML = `<p class="hint">没有这个公司了。</p>`; return; }
   const mentioned = G.posts.filter((p) => (e.mentions || []).includes(p.id) || (p.mentions || []).includes(e.id));
   const opins = G.opinions.filter((o) => (o.about || []).includes(e.id));
   const byDate = {};
@@ -187,12 +37,17 @@ function renderTrack(id) {
   mentioned.forEach((p) => bucket(p.date).posts.push(p));
   opins.forEach((o) => bucket(o.date).ops.push(o));
   const dates = Object.keys(byDate).sort();   // oldest → newest, read the evolution forward
+
+  // related — only other companies, so clicking a chip always lands on a tracked entity
   const rels = G.relations.filter((r) => r.src === e.id || r.dst === e.id);
+  const seen = new Set();
   const relChips = rels.map((r) => {
     const other = r.src === e.id ? r.dst : r.src;
     const oe = G.entities.find((x) => x.id === other);
+    if (!isCompany(oe) || seen.has(other)) return "";
+    seen.add(other);
     const thread = r.type === "same_thread_as";
-    return `<span class="chip${thread ? " thread" : ""}" data-ent="${other}">${thread ? "🔗 " : ""}${oe ? oe.canonical_name : other}</span>`;
+    return `<span class="chip${thread ? " thread" : ""}" data-ent="${other}">${thread ? "🔗 " : ""}${oe.canonical_name}</span>`;
   }).join("");
   const span = dates.length ? `${dates[0]} → ${dates[dates.length - 1]}` : (e.first_seen || "—");
 
@@ -202,52 +57,19 @@ function renderTrack(id) {
       ${posts.map((p) => `<div class="tl-post"><span class="cat">${p.category || ""}${p.is_long_read ? " · long read" : ""}</span><h4>${p.headline || ""}</h4><div class="sum">${p.body_summary || ""}</div></div>`).join("")}
       ${ops.map((o) => `<div class="op ${o.holder}"><b>${o.label || o.holder}${o.stance ? ` · ${o.stance}` : ""}:</b> ${o.text || ""}</div>`).join("")}
     </div>`;
-  }).join("") : `<p class="hint">这个实体还没有可追踪的提及或观点。</p>`;
+  }).join("") : `<p class="hint">这家公司还没有可追踪的提及或观点。</p>`;
 
   $("#track-body").innerHTML =
     `<div class="track-head">
-       <div class="type">${e.type}${e.aliases && e.aliases.length ? ` · aka ${e.aliases.join(", ")}` : ""}</div>
+       <div class="type">company${e.aliases && e.aliases.length ? ` · aka ${e.aliases.join(", ")}` : ""}</div>
        <h3>${e.canonical_name}</h3>
        ${e.description ? `<p>${e.description}</p>` : ""}
        <div class="track-meta">提及 ${mentioned.length} 篇 · 观点 ${opins.length} 条 · ${span}</div>
-       ${relChips ? `<div class="track-rels"><b>关联</b> ${relChips}</div>` : ""}
+       ${relChips ? `<div class="track-rels"><b>关联公司</b> ${relChips}</div>` : ""}
      </div>${dayHtml}`;
   $("#track-body").querySelectorAll(".chip[data-ent]").forEach((c) => (c.onclick = () => {
     const t = c.dataset.ent;
     if (G.entities.some((x) => x.id === t)) { $("#track-entity").value = t; renderTrack(t); }
-  }));
-}
-
-// ----------------------------------------------------------------- opinions
-function buildOpinions() {
-  const ops = G.opinions.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-  const entName = (id) => { const e = G.entities.find((x) => x.id === id); return e ? e.canonical_name : id; };
-  $("#opinions-view").innerHTML = `<div style="max-width:900px">${ops.map((o) => `
-    <div class="opcard ${o.holder}">
-      <div class="meta">${o.holder.toUpperCase()} · ${o.label} · ${o.date}<span class="stance">${o.stance || ""}</span></div>
-      <p>${o.text}</p>
-      <div>${(o.about || []).map((a) => `<span class="chip">${entName(a)}</span>`).join("")}</div>
-    </div>`).join("")}</div>`;
-}
-
-// ----------------------------------------------------------------- ask
-async function ask() {
-  const q = $("#ask-input").value.trim(); if (!q) return;
-  const card = document.createElement("div"); card.className = "qa";
-  card.innerHTML = `<div class="q">${q}</div><div class="a"><span class="spin"></span> 基于图谱检索中…</div>`;
-  $("#qa-list").prepend(card); $("#ask-input").value = "";
-  const res = await api.post("/api/reader/ask", { question: q });
-  card.querySelector(".a").textContent = res.answer || ("失败：" + (res.error || "?"));
-}
-
-// ----------------------------------------------------------------- tabs
-function bindTabs() {
-  document.querySelectorAll(".tabbtn").forEach((b) => (b.onclick = () => {
-    document.querySelectorAll(".tabbtn").forEach((x) => x.classList.toggle("active", x === b));
-    const v = b.dataset.view;
-    $("#cy").classList.toggle("active", v === "cy");
-    document.querySelectorAll(".view").forEach((p) => p.classList.toggle("active", p.id === v));
-    if (v === "cy" && cy) { cy.resize(); cy.fit(undefined, 50); }
   }));
 }
 

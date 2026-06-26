@@ -2,11 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>小钻风 · 知识图谱</title>
-<script src="https://unpkg.com/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
-<script src="https://unpkg.com/layout-base@2.0.1/layout-base.js"></script>
-<script src="https://unpkg.com/cose-base@2.2.0/cose-base.js"></script>
-<script src="https://unpkg.com/cytoscape-fcose@2.2.0/cytoscape-fcose.js"></script>
+<title>小钻风 · 演变追踪</title>
 <style>
 :root{--navy:#0F2147;--denim:#80B3D2;--wool:#F5F2ED;--vermilion:#B5252B;--ink:#1a1a1a;--mute:#6E6E6E;--line:#e2ddd4;}
 *{box-sizing:border-box;}
@@ -15,47 +11,18 @@ body{display:flex;flex-direction:column;background:#ece8e0;}
 header{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--navy);color:#fff;flex:0 0 auto;flex-wrap:wrap;}
 header .brand{font-weight:700;font-family:"IBM Plex Mono",monospace;}
 header a{color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.3);padding:5px 10px;border-radius:7px;}
-.tabbtn{border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;font:inherit;padding:5px 12px;border-radius:7px;cursor:pointer;}
-.tabbtn.active{background:#fff;color:var(--navy);font-weight:700;}
-header input[type=search]{font:inherit;padding:5px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;}
-header input::placeholder{color:rgba(255,255,255,.6);}
-header .filters{display:flex;gap:6px;font-size:12px;align-items:center;flex-wrap:wrap;}
-header .filters label{display:inline-flex;align-items:center;gap:2px;cursor:pointer;}
-header .filters .all-row{font-weight:700;border-right:1px solid rgba(255,255,255,.3);padding-right:8px;margin-right:2px;}
-header label{display:flex;gap:3px;align-items:center;cursor:pointer;}
-main{flex:1;display:flex;min-height:0;}
-#stage{flex:1;position:relative;background:#f3f0e9;}
-#cy{position:absolute;inset:0;}
-.view{position:absolute;inset:0;overflow:auto;padding:22px;display:none;}
-.view.active{display:block;}
-#cy.active{display:block;}
-aside{flex:0 0 340px;border-left:1px solid var(--line);background:#fbfaf7;overflow:auto;padding:16px;}
-aside .empty{color:var(--mute);font-size:13px;}
-aside h3{margin:0 0 4px;color:var(--navy);}
-aside .type{font-size:11px;font-family:"IBM Plex Mono",monospace;color:var(--mute);text-transform:uppercase;}
-aside p{font-size:14px;line-height:1.6;}
-aside .sec{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
-aside .sec b{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;}
-aside .chip{display:inline-block;background:#eef2f7;border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin:3px 3px 0 0;font-size:12px;cursor:pointer;}
-aside .rel-row{display:flex;align-items:center;gap:5px;font-size:13px;margin-top:4px;}
-aside .rel-row .rel-del{margin-left:auto;border:1px solid var(--line);background:#fff;color:var(--mute);border-radius:5px;width:18px;height:18px;line-height:1;padding:0;font-size:11px;cursor:pointer;opacity:0;transition:opacity .15s;}
-aside .rel-row:hover .rel-del{opacity:1;}
-aside .rel-row .rel-del:hover{background:var(--vermilion);color:#fff;border-color:var(--vermilion);}
-aside .ent-del{border:1px solid var(--vermilion);background:#fff;color:var(--vermilion);border-radius:7px;padding:5px 11px;font:inherit;font-size:13px;cursor:pointer;}
-aside .ent-del:hover{background:var(--vermilion);color:#fff;}
-aside .op{background:#fff;border:1px solid var(--line);border-left:3px solid var(--denim);border-radius:8px;padding:8px;margin-top:7px;font-size:13px;}
-aside .op.yibo{border-left-color:var(--vermilion);} aside .op.claude{border-left-color:#8d7bbd;}
-aside .op .h{font-size:11px;color:var(--mute);font-family:"IBM Plex Mono",monospace;}
-/* timeline */
+main{flex:1;min-height:0;overflow:auto;padding:22px;}
+.hint{color:var(--mute);font-size:13px;}
+/* day blocks */
 .tl-day{margin-bottom:26px;}
 .tl-day h2{color:var(--navy);font-family:"IBM Plex Mono",monospace;border-bottom:2px solid var(--denim);padding-bottom:4px;}
-.tl-post{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;}
+.tl-post{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;max-width:900px;}
 .tl-post .cat{font-size:11px;font-family:"IBM Plex Mono",monospace;color:var(--vermilion);text-transform:uppercase;}
 .tl-post h4{margin:3px 0 6px;}
 .tl-post .sum{font-size:13px;color:#444;line-height:1.6;}
-.tl-post .op{font-size:13px;border-left:3px solid var(--denim);padding-left:8px;margin-top:8px;color:#333;}
-.tl-post .op.yibo{border-color:var(--vermilion);} .tl-post .op.claude{border-color:#8d7bbd;}
-/* entity tracker（演变追踪） */
+.tl-day>.op{font-size:13px;background:#fff;border:1px solid var(--line);border-left:3px solid var(--denim);border-radius:8px;padding:8px 10px;margin:8px 0;color:#333;line-height:1.6;max-width:900px;}
+.tl-day>.op.yibo{border-left-color:var(--vermilion);} .tl-day>.op.claude{border-left-color:#8d7bbd;}
+/* tracker bar + head */
 .track-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:13px;}
 .track-bar select{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;max-width:340px;}
 .track-bar .track-hint{color:var(--mute);font-size:12px;}
@@ -67,48 +34,17 @@ aside .op .h{font-size:11px;color:var(--mute);font-family:"IBM Plex Mono",monosp
 .track-head .track-rels{margin-top:8px;font-size:12px;}
 .track-head .track-rels .chip{display:inline-block;background:#eef2f7;border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin:3px 3px 0 0;font-size:12px;cursor:pointer;}
 .track-head .track-rels .chip.thread{background:#fbeae0;border-color:var(--vermilion);color:var(--vermilion);}
-.tl-day>.op{font-size:13px;background:#fff;border:1px solid var(--line);border-left:3px solid var(--denim);border-radius:8px;padding:8px 10px;margin:8px 0;color:#333;line-height:1.6;}
-.tl-day>.op.yibo{border-left-color:var(--vermilion);} .tl-day>.op.claude{border-left-color:#8d7bbd;}
-/* opinions view */
-.opcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;max-width:900px;}
-.opcard .meta{font-size:11px;font-family:"IBM Plex Mono",monospace;color:var(--mute);}
-.opcard.yibo{border-left:4px solid var(--vermilion);} .opcard.claude{border-left:4px solid #8d7bbd;}
-.opcard .stance{display:inline-block;font-size:11px;padding:1px 7px;border-radius:6px;background:#eef2f7;margin-left:6px;}
-/* ask */
-#ask-view{max-width:820px;margin:0 auto;}
-#ask-box{display:flex;gap:8px;margin-bottom:16px;}
-#ask-box input{flex:1;font:inherit;padding:10px;border:1px solid var(--line);border-radius:9px;}
-#ask-box button{font:inherit;padding:10px 18px;border:0;background:var(--navy);color:#fff;border-radius:9px;cursor:pointer;}
-.qa{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;}
-.qa .q{font-weight:700;color:var(--navy);}
-.qa .a{margin-top:8px;line-height:1.7;white-space:pre-wrap;}
-.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:sp .7s linear infinite;}
-@keyframes sp{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
 <header>
-  <span class="brand">知识图谱</span>
-  <button class="tabbtn active" data-view="cy">实体网络</button>
-  <button class="tabbtn" data-view="timeline-view">演变追踪</button>
-  <button class="tabbtn" data-view="opinions-view">观点</button>
-  <button class="tabbtn" data-view="ask-view">问答</button>
-  <input type="search" id="search" placeholder="搜索实体…">
-  <div class="filters" id="type-filters"></div>
-  <a href="/" style="margin-left:auto" title="返回记忆手帐">← 手帐</a><a href="/reader/">餐厅</a>
+  <span class="brand">演变追踪</span>
+  <a href="/" style="margin-left:auto" title="返回记忆手帐">← 手帐</a>
+  <a href="/reader/">餐厅</a>
   <a href="/reader/learn">学习</a>
 </header>
 <main>
-  <div id="stage">
-    <div id="cy" class="active"></div>
-    <div id="timeline-view" class="view"></div>
-    <div id="opinions-view" class="view"></div>
-    <div id="ask-view" class="view">
-      <div id="ask-box"><input id="ask-input" placeholder="对所有积累的导读提问，例如：我都标注过哪些关于 verifier 的东西？"><button id="ask-go">问</button></div>
-      <div id="qa-list"></div>
-    </div>
-  </div>
-  <aside id="detail"><p class="empty">点一个节点看详情 — 它的关系、出处、相关观点。</p></aside>
+  <div id="timeline-view"></div>
 </main>
 <script src="/reader/graph.js"></script>
 </body>
