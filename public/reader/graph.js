@@ -6,14 +6,22 @@ const api = {
 };
 let G = null, cy = null;
 if (window.cytoscapeFcose) cytoscape.use(window.cytoscapeFcose);
-const LAYOUT = {
-  name: window.cytoscapeFcose ? "fcose" : "cose",
-  quality: "proof", animate: false, randomize: true,
-  nodeDimensionsIncludeLabels: true,   // space nodes by their LABEL box → no overlap
-  idealEdgeLength: 120, nodeSeparation: 110, nodeRepulsion: 9000,
-  gravity: 0.25, gravityRange: 3.0, packComponents: true, numIter: 2500,
-  fit: true, padding: 50,              // auto-fit the whole graph into the canvas
-};
+// Layout cost scales with graph size: small graphs get the high-quality solver;
+// as the graph grows across days, trade a little layout quality for responsiveness
+// so it doesn't freeze the tab.
+function layoutFor(n) {
+  const big = n > 120, huge = n > 300;
+  return {
+    name: window.cytoscapeFcose ? "fcose" : "cose",
+    quality: huge ? "draft" : big ? "default" : "proof",
+    animate: false, randomize: true,
+    nodeDimensionsIncludeLabels: true,   // space nodes by their LABEL box → no overlap
+    idealEdgeLength: 120, nodeSeparation: 110, nodeRepulsion: 9000,
+    gravity: 0.25, gravityRange: 3.0, packComponents: true,
+    numIter: huge ? 1000 : big ? 1500 : 2500,
+    fit: true, padding: 50,              // auto-fit the whole graph into the canvas
+  };
+}
 
 const TYPE_COLOR = {
   company: "#0F2147", person: "#B5252B", product: "#2f7d4f", paper: "#8d7bbd",
@@ -53,7 +61,7 @@ function buildCy() {
       { selector: ".faded", style: { opacity: 0.12 } },
       { selector: ".hi", style: { "border-width": 3, "border-color": "#B5252B" } },
     ],
-    layout: LAYOUT,
+    layout: layoutFor(nodes.length),
     wheelSensitivity: 0.25,
   });
   cy.on("tap", "node", (evt) => showEntity(evt.target.data("e"), opByEntity));

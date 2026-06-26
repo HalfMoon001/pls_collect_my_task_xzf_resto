@@ -198,6 +198,7 @@ const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${Stri
 function drawCal() {
   const { y, m } = state.dpMonth;
   const deckDates = new Set(state.decks.map((d) => d.date));
+  const annoDates = new Set((state.graph?.annotations || []).map((a) => a.date));  // days I've annotated → 橙点
   const startDow = new Date(y, m, 1).getDay();
   const days = new Date(y, m + 1, 0).getDate();
   const today = todayStr();
@@ -206,7 +207,10 @@ function drawCal() {
   for (let d = 1; d <= days; d++) {
     const ds = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     const cls = ["dp-cell", deckDates.has(ds) ? "has" : "", ds === state.date ? "sel" : "", ds === today ? "today" : ""].filter(Boolean).join(" ");
-    cells += `<div class="${cls}" data-date="${ds}">${d}${deckDates.has(ds) ? '<span class="dot"></span>' : ""}</div>`;
+    let dots = "";
+    if (deckDates.has(ds)) dots += '<span class="dot dot-deck" title="有导读"></span>';
+    if (annoDates.has(ds)) dots += '<span class="dot dot-anno" title="有标注"></span>';
+    cells += `<div class="${cls}" data-date="${ds}">${d}${dots ? `<span class="dots">${dots}</span>` : ""}</div>`;
   }
   $("#dp-pop").innerHTML = `
     <div class="dp-head"><button class="dp-nav" data-nav="-1">‹</button><span>${y}-${String(m + 1).padStart(2, "0")}</span><button class="dp-nav" data-nav="1">›</button></div>
