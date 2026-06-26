@@ -3,17 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小钻风阅读器</title>
+<title>小钻风餐厅</title>
 <link rel="stylesheet" href="/reader/reader.css">
 </head>
 <body>
 <header id="topbar">
   <a class="back-memo" href="/" title="返回记忆手帐">← 手帐</a>
-  <div class="brand">小钻风 · 阅读器</div>
+  <div class="brand">小钻风餐厅</div>
   <div id="datepicker">
     <button id="dp-btn" title="选择日期">📅 选择日期</button>
     <div id="dp-pop" hidden></div>
   </div>
+  <button id="btn-upload" title="上传今天的导读 HTML">⬆ 上传导读</button>
+  <input type="file" id="file-deck" accept=".html,.htm" hidden>
   <button id="btn-extract" title="用 CC 抽取这篇导读到知识图谱">抽取入图谱</button>
   <a id="btn-graph" href="/reader/graph">知识图谱</a>
   <a id="btn-learn" href="/reader/learn">学习</a>

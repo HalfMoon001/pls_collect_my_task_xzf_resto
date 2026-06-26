@@ -35,6 +35,8 @@ async function boot() {
   state.decks = decks;
   bindDatepicker();
   $("#btn-extract").onclick = extractCurrent;
+  $("#btn-upload").onclick = () => $("#file-deck").click();
+  $("#file-deck").onchange = uploadDeck;
   document.querySelectorAll(".tab").forEach((t) => (t.onclick = () => switchTab(t.dataset.tab)));
   bindToolbar();
   bindDivider();
@@ -62,6 +64,23 @@ function toast(msg) {
   if (!t) { t = document.createElement("div"); t.id = "xzf-toast"; document.body.appendChild(t); }
   t.textContent = msg; t.classList.add("show");
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+// upload today's deck HTML → save to deck folder → load it
+async function uploadDeck(e) {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  setStatus("上传中…");
+  try {
+    const fd = new FormData(); fd.append("deck", f);
+    const res = await fetch("/api/reader/upload", { method: "POST", body: fd }).then((r) => r.json());
+    if (res.error) { setStatus("上传失败"); alert("上传失败：" + res.error); return; }
+    const { decks } = await api.get("/api/reader/decks");
+    state.decks = decks;
+    setStatus("已上传 " + res.date);
+    toast("已上传导读 · " + res.date);
+    loadDeck(res.date);
+  } catch (err) { setStatus("上传失败"); alert("上传失败：" + err.message); }
 }
 
 // translation model status → if local model unavailable, offer a one-click pull

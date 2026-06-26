@@ -55,7 +55,7 @@ function renderGlossary(q) {
   const mine = myTerms().length;
   $("#gloss-count").textContent = `我标注的术语 ${mine} 个` + ($("#show-concepts").checked ? ` · 含图谱概念共 ${items.length} 个` : "");
   if (!items.length) {
-    $("#gloss-list").innerHTML = `<div class="empty">还没有标注过术语。<br>去<a href="/reader/">阅读器</a>里选中一个术语点 <b>📖 术语</b>，CC 会生成解释并自动收进这里。</div>`;
+    $("#gloss-list").innerHTML = `<div class="empty">还没有标注过术语。<br>去<a href="/reader/">餐厅</a>里选中一个术语点 <b>📖 术语</b>，CC 会生成解释并自动收进这里。</div>`;
     return;
   }
   const headline = (pid) => { const p = G.posts.find((x) => x.id === pid); return p ? `${p.date} · ${p.headline}` : ""; };
