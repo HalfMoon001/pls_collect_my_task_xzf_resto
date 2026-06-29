@@ -3,7 +3,7 @@ let allTags = [];
 let selectedTags = [];
 let settings = {};
 let memos = [];
-let filteredMemos = null;
+let searchResultIds = null; // 当前搜索命中的手帐 id（有序）；null = 未搜索。看板始终从 memos 实时派生，避免缓存数组失同步
 
 const TAG_COLORS = 6;
 const DECORS = ['🌿', '🌸', '🐱', '🍂', '✨', '🌻', '🌷', '☘️', '🦋', '🐝'];
@@ -435,19 +435,34 @@ function renderFilterTags() {
 }
 
 document.getElementById('clearFilterBtn').addEventListener('click', () => {
-  filterAllSelected = true; filterSelectedTags = []; filteredMemos = null;
+  filterAllSelected = true; filterSelectedTags = [];
   renderFilterTags(); renderKanban();
 });
 
+// 筛选只改状态，显示列表由 renderKanban() 实时派生
 function applyFilters() {
-  filteredMemos = filterAllSelected ? null : memos.filter(m => m.tags.some(t => filterSelectedTags.includes(t)));
   renderKanban();
+}
+
+// 看板显示列表的唯一真相来源：始终基于实时的 memos 计算，因此删除/编辑/置顶/新建后无需手动同步任何缓存数组
+function getDisplayMemos() {
+  let list;
+  if (searchResultIds !== null) {
+    // 保留搜索结果顺序，并映射到实时 memo 对象（已删除的自动剔除）
+    list = searchResultIds.map(id => memos.find(m => m.id === id)).filter(Boolean);
+  } else {
+    list = memos;
+  }
+  if (!filterAllSelected && filterSelectedTags.length) {
+    list = list.filter(m => m.tags.some(t => filterSelectedTags.includes(t)));
+  }
+  return list;
 }
 
 // === Kanban ===
 function renderKanban() {
   const grid = document.getElementById('kanbanGrid');
-  const displayMemos = filteredMemos !== null ? filteredMemos : memos;
+  const displayMemos = getDisplayMemos();
 
   // Flat 3-column grid — deduplicate memos (a memo may appear in multiple tag groups)
   const seen = new Set();
@@ -671,6 +686,7 @@ function renderTagManagerList() {
               if (res.error === 'exists') { showModalToast('标签已经存在了喔～'); return; }
               allTags = res.tags;
               memos = await api('/api/memos');
+              searchResultIds = null; filterAllSelected = true; filterSelectedTags = [];
             }
             const effectiveName = newName;
             const tagTapes = settings.tagTapes || {};
@@ -699,6 +715,7 @@ function renderTagManagerList() {
           allTags = res.tags;
           memos = await api('/api/memos');
           settings = await api('/api/settings');
+          searchResultIds = null; filterAllSelected = true; filterSelectedTags = [];
           renderTagManagerList(); renderTagSelector(); renderFilterTags(); renderKanban();
         } catch (err) { console.error(err); }
       });
@@ -805,11 +822,12 @@ document.getElementById('searchClearBtn').addEventListener('click', () => {
 });
 
 function clearSearch() {
-  filteredMemos = null;
+  searchResultIds = null;
   filterAllSelected = true;
   filterSelectedTags = [];
   document.getElementById('searchInput').value = '';
   document.getElementById('ccSearchInput').value = '';
+  const cb = document.getElementById('clearSearchBtn'); if (cb) cb.classList.add('hidden');
   renderFilterTags();
   renderKanban();
 }
@@ -817,10 +835,10 @@ function clearSearch() {
 async function doSearch() {
   const keyword = document.getElementById('searchInput').value.trim();
   if (!keyword) { clearSearch(); return; }
-  const params = new URLSearchParams(); params.set('keyword', keyword);
-  if (filterSelectedTags.length) params.set('tag', filterSelectedTags.join(','));
+  // 仅按关键词检索取 id；标签筛选交给 getDisplayMemos() 客户端实时叠加，二者可自由组合
   try {
-    filteredMemos = await api(`/api/memos?${params}`);
+    const results = await api(`/api/memos?keyword=${encodeURIComponent(keyword)}`);
+    searchResultIds = results.map(m => m.id);
     document.getElementById('clearSearchBtn').classList.remove('hidden');
     renderKanban();
   } catch (err) { console.error(err); }
@@ -838,7 +856,7 @@ document.getElementById('smartSearchBtn').addEventListener('click', async () => 
     const res = await api('/api/cc/ask', { method: 'POST', body: JSON.stringify({ action: 'search', params: { query } }) });
     hideCCTask('搜索手帐');
     btn.disabled = false; btn.textContent = '搜索';
-    filteredMemos = (res.results && res.results.length) ? res.results.map(id => memos.find(m => m.id === id)).filter(Boolean) : [];
+    searchResultIds = (res.results && res.results.length) ? res.results.slice() : [];
     if (res.keywords && res.keywords.length) document.getElementById('searchInput').value = res.keywords.join(' ');
     document.getElementById('clearSearchBtn').classList.remove('hidden');
     renderKanban();

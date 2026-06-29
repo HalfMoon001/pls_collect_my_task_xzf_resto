@@ -1,6 +1,6 @@
 {
   "name": "memo-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Memo Journal with CC — personal journal app with Claude Code CLI integration",
   "main": "electron-main.js",
   "scripts": {
