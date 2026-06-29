@@ -80,6 +80,7 @@ async function boot() {
   bindDropzone();
   $("#btn-upload").onclick = () => $("#file-deck").click();
   $("#file-deck").onchange = uploadDeck;
+  const rp = $("#btn-reprocess"); if (rp) rp.onclick = reprocessUningested;
   document.querySelectorAll(".tab").forEach((t) => (t.onclick = () => switchTab(t.dataset.tab)));
   bindToolbar();
   bindDivider();
@@ -251,6 +252,56 @@ async function autoDetectTasks(date) {
     }
   }
   return res;
+}
+
+// ---------------------------------------------- 补录未入图谱的导读（一键）
+// A deck is "in the graph" iff some post id carries its date stamp (p_YYYYMMDD…) —
+// this mirrors the server's own already-extracted guard, so detection never drifts
+// from what extract actually does. Reprocess only runs extract + detect_tasks, both
+// of which are additive merges that never touch annotations.json — so any 标注 the
+// user made before processing survives untouched.
+function deckStamp(date) { return "p_" + (date || "").replace(/-/g, ""); }
+function uningestedDates() {
+  const ids = (state.graph && state.graph.posts || []).map((p) => p.id || "");
+  return (state.decks || [])
+    .map((d) => d.date)
+    .filter((date) => { const s = deckStamp(date); return !ids.some((id) => id.startsWith(s)); });
+}
+
+async function reprocessUningested() {
+  const btn = $("#btn-reprocess");
+  // refresh deck list + graph so the "missing" set reflects current truth
+  try { const { decks } = await api.get("/api/reader/decks"); state.decks = decks; } catch {}
+  await refreshGraph();
+
+  const pending = uningestedDates();
+  if (!pending.length) { toast("所有导读都已入图谱啦 ✓"); return; }
+  if (!confirm(`有 ${pending.length} 篇导读还没入图谱：\n${pending.join("、")}\n\n现在逐篇补录（抽取收录 + 找任务）？\n你已经做过的标注会完整保留。`)) return;
+
+  if (btn) btn.disabled = true;
+  let ok = 0, fail = 0, tasksAdded = 0;
+  // CC is a single global lock, so process sequentially; ccPost handles 排队/backoff.
+  for (let i = 0; i < pending.length; i++) {
+    const date = pending[i];
+    const tag = `补录 ${i + 1}/${pending.length} · ${date}`;
+    ingest("busy", `${tag} 抽取收录中…（CC，约十几秒）`);
+    const ex = await ccPost("/api/reader/extract", { date }, () => ingest("busy", `${tag} CC 排队中…`));
+    if (ex && ex.error) { fail++; continue; }
+
+    ingest("busy", `${tag} 找评论里的任务…`);
+    const tk = await ccPost("/api/reader/detect_tasks", { date }, () => ingest("busy", `${tag} CC 排队中…`));
+    if (tk && !tk.error) {
+      tasksAdded += (tk.added || 0);
+      // if the user happens to be reading one of the just-processed decks, light up its new tasks now
+      if (state.date === date) (tk.newTasks || []).forEach((a) => highlight(a));
+    }
+    ok++;
+  }
+
+  await refreshGraph();
+  renderAnnoList();
+  if (btn) btn.disabled = false;
+  ingest("done", `补录完成 · ${ok} 篇入图谱${fail ? `，${fail} 篇失败` : ""}，新增任务 ${tasksAdded} 个 📌`);
 }
 
 // drag a .html anywhere onto the page to upload it (same flow as the button).
